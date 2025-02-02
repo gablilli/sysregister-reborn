@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --text: #1B0E0E;
+  --background: #F7EEEE;
+  --primary: #CC0F0F;
+  --secondary: #D68080;
+  --accent: #D68080;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #f1e4e4;
+    --background: #130909;
+    --primary: #f03333;
+    --secondary: #7f2929;
+    --accent: #c83737;
+  }
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}
