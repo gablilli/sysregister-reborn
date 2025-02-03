@@ -6,7 +6,7 @@ import { GradeType, PeriodType } from "@/lib/types";
 import { get } from "@/lib/api";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import MarksPageLinkLoading, { EventsPageLinkLoading } from "./loading";
+import MarksPageLinkLoading, { EventsPageLinkLoading } from "./skeletons";
 
 export default async function Page() {
   return (
@@ -43,7 +43,7 @@ async function MarksPageLink() {
   });
   return (
     <Link
-      href={`#`}
+      href={`/register/marks`}
       className="rounded-xl flex flex-col overflow-hidden mb-4 relative p-4 py-3"
     >
       <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />

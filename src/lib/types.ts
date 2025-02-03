@@ -23,6 +23,7 @@ export type Subject = {
     description: string;
     order: number;
     teachers: Teacher[];
+    marks: GradeType[];
 }
 
 export type Subjects = Subject[];
