@@ -33,30 +33,31 @@ const Page = async ({ params }: { params: { day: string }; }) => {
   return (
     <div className="p-4">
       <Suspense fallback={<div>Caricamento...</div>} >
-        <p className="text-2xl font-semibold mb-3 mt-3">Lezioni del {formattedDate}</p>
-        <div>
-          {lessons && lessons.map((lesson, index) => (
-            <>
-              <LessonItem
-                key={index}
-                subject={lesson.subjectDesc}
-                teachers={lesson.authorName}
-                time={lesson.evtHPos.toString()}
-                content={lesson.lessonArg}
-                type={
-                  (!lessons[index + 1] || lessons[index + 1].evtHPos !== lesson.evtHPos) && (!lessons[index - 1] || lessons[index - 1].evtHPos !== lesson.evtHPos)
-                    ? "single"
-                    : (!lessons[index + 1] || lessons[index + 1].evtHPos !== lesson.evtHPos)
-                      ? "last"
-                      : (!lessons[index - 1] || lessons[index - 1].evtHPos !== lesson.evtHPos)
-                        ? "first"
-                        : ""
-                }
-              />
-              {(lessons[index + 1] && lessons[index + 1].evtHPos !== lesson.evtHPos) && <div className="h-8 border border-dashed w-[1px] opacity-50 mx-auto" />}
-            </>
-          ))}
-        </div>
+        <div className="max-w-3xl mx-auto">
+          <p className="text-2xl font-semibold mb-3 mt-3">Lezioni del {formattedDate}</p>
+          <div>
+            {lessons && lessons.map((lesson, index) => (
+              <>
+                <LessonItem
+                  key={index}
+                  subject={lesson.subjectDesc}
+                  teachers={lesson.authorName}
+                  time={lesson.evtHPos.toString()}
+                  content={lesson.lessonArg}
+                  type={
+                    (!lessons[index + 1] || lessons[index + 1].evtHPos !== lesson.evtHPos) && (!lessons[index - 1] || lessons[index - 1].evtHPos !== lesson.evtHPos)
+                      ? "single"
+                      : (!lessons[index + 1] || lessons[index + 1].evtHPos !== lesson.evtHPos)
+                        ? "last"
+                        : (!lessons[index - 1] || lessons[index - 1].evtHPos !== lesson.evtHPos)
+                          ? "first"
+                          : ""
+                  }
+                />
+                {(lessons[index + 1] && lessons[index + 1].evtHPos !== lesson.evtHPos) && <div className="h-8 border border-dashed w-[1px] opacity-50 mx-auto" />}
+              </>
+            ))}
+          </div></div>
       </Suspense>
     </div>
   );

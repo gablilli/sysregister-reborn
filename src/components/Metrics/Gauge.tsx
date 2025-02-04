@@ -33,7 +33,7 @@ export default function Gauge({
       ></div>
       <div className="flex flex-col items-center">
         <span className="font-semibold" style={{ fontSize }}>
-          {isNaN(value) ? 0 : value}
+          {isNaN(value) ? 0 : value === 0 ? "-" : value}
           <span
             className="text-sm font-normal"
             style={{ fontSize: fontSize * 0.4 }}

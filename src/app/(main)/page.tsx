@@ -75,70 +75,72 @@ export default function Home() {
         <div className="absolute top-0 bottom-0 left-0 right-0 bg-background -z-20" />
         <DaySelector setCurrentDay={setSelectedDay} currentDay={selectedDay} />
       </div>
-      <div className="p-4" ref={parent}>
-        <LessonsPageLink lessons={lessons} day={selectedDay} />
-        <p className="font-semibold text-2xl mb-3">Agenda</p>
-        <div className="flex gap-4 flex-col" ref={parent}>
-          {!agendaLoading && agenda && agenda.length === 0 && (
-            <div className="rounded-xl overflow-hidden relative opacity-50 p-4">
-              <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
-              <p className="text-primary font-semibold text-center">
-                Nessun evento su agenda
-              </p>
-            </div>
-          )}
-          {!agendaLoading &&
-            agenda &&
-            agenda
-              .filter((item) => !item.completed)
-              .map((item, index) => (
-                <AgendaItem
-                  key={index}
-                  completed={item.completed as boolean}
-                  author={item.authorName}
-                  toggleCompletedAgenda={() =>
-                    toggleCompletedAgenda(item.evtId)
-                  }
-                  time={
-                    new Date(item.evtDatetimeBegin).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }) +
-                    " - " +
-                    new Date(item.evtDatetimeEnd).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  }
-                  content={item.notes}
-                />
-              ))}
-          {!agendaLoading &&
-            agenda &&
-            agenda
-              .filter((item) => item.completed)
-              .map((item, index) => (
-                <AgendaItem
-                  key={index}
-                  completed={item.completed as boolean}
-                  author={item.authorName}
-                  toggleCompletedAgenda={() =>
-                    toggleCompletedAgenda(item.evtId)
-                  }
-                  time={
-                    new Date(item.evtDatetimeBegin).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }) +
-                    " - " +
-                    new Date(item.evtDatetimeEnd).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  }
-                  content={item.notes}
-                />
-              ))}
+      <div className="max-w-3xl mx-auto">
+        <div className="p-4" ref={parent}>
+          <LessonsPageLink lessons={lessons} day={selectedDay} />
+          <p className="font-semibold text-2xl mb-3">Agenda</p>
+          <div className="flex gap-4 flex-col" ref={parent}>
+            {!agendaLoading && agenda && agenda.length === 0 && (
+              <div className="rounded-xl overflow-hidden relative opacity-50 p-4">
+                <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
+                <p className="text-primary font-semibold text-center">
+                  Nessun evento su agenda
+                </p>
+              </div>
+            )}
+            {!agendaLoading &&
+              agenda &&
+              agenda
+                .filter((item) => !item.completed)
+                .map((item, index) => (
+                  <AgendaItem
+                    key={index}
+                    completed={item.completed as boolean}
+                    author={item.authorName}
+                    toggleCompletedAgenda={() =>
+                      toggleCompletedAgenda(item.evtId)
+                    }
+                    time={
+                      new Date(item.evtDatetimeBegin).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }) +
+                      " - " +
+                      new Date(item.evtDatetimeEnd).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    }
+                    content={item.notes}
+                  />
+                ))}
+            {!agendaLoading &&
+              agenda &&
+              agenda
+                .filter((item) => item.completed)
+                .map((item, index) => (
+                  <AgendaItem
+                    key={index}
+                    completed={item.completed as boolean}
+                    author={item.authorName}
+                    toggleCompletedAgenda={() =>
+                      toggleCompletedAgenda(item.evtId)
+                    }
+                    time={
+                      new Date(item.evtDatetimeBegin).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }) +
+                      " - " +
+                      new Date(item.evtDatetimeEnd).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    }
+                    content={item.notes}
+                  />
+                ))}
+          </div>
         </div>
       </div>
     </div>
@@ -161,9 +163,8 @@ function AgendaItem({
   return (
     <div
       onClick={() => toggleCompletedAgenda()}
-      className={`rounded-xl transition-all ${
-        completed ? "opacity-45" : "opacity-100"
-      } overflow-hidden relative p-4`}
+      className={`rounded-xl transition-all ${completed ? "opacity-45" : "opacity-100"
+        } overflow-hidden relative p-4`}
     >
       <div
         className={
@@ -215,9 +216,8 @@ function LessonsPageLink({
 
   return (
     <Link
-      href={`/lessons/${day.getFullYear()}${
-        (day.getMonth() + 1 < 10 ? "0" : "") + (day.getMonth() + 1)
-      }${day.getDate() < 10 ? "0" : ""}${day.getDate()}`}
+      href={`/lessons/${day.getFullYear()}${(day.getMonth() + 1 < 10 ? "0" : "") + (day.getMonth() + 1)
+        }${day.getDate() < 10 ? "0" : ""}${day.getDate()}`}
       className="rounded-xl overflow-hidden mb-4 relative p-4 py-3 flex items-center justify-between"
     >
       <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />

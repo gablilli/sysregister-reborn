@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import "../../globals.css";
 
-const inter = Inter({ subsets: ['latin'], display: 'swap', adjustFontFallback: false})
+const inter = Inter({ subsets: ['latin'], display: 'swap', adjustFontFallback: false })
 
 export default function RootLayout({
   children,
@@ -13,7 +13,9 @@ export default function RootLayout({
       <body
         className={`${inter.className} antialiased bg-background text-text`}
       >
-        {children}
+        <div className="max-w-lg mx-auto">
+          {children}
+        </div>
       </body>
     </html>
   );

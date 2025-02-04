@@ -13,7 +13,7 @@ import Image from "next/image";
 export default function Navbar() {
   const path = usePathname();
   return (
-    <div className="dark:bg-black bg-white fixed bottom-0 left-0 right-0 h-[80px] shadow-lg shadow-accent">
+    <div className="dark:bg-black z-50 bg-white fixed bottom-0 left-0 right-0 h-[80px] shadow-lg shadow-accent">
       <div className="flex items-center pt-4 justify-around">
         {/*today icon*/}
         <Link href={"/"}>

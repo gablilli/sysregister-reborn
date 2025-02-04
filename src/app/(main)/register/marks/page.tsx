@@ -11,6 +11,8 @@ import { fetchMarks, fetchPeriods } from "./actions";
 import { getGradesAverage } from "@/lib/utils";
 import Gauge from "@/components/Metrics/Gauge";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 export default function Page() {
   const [periods, setPeriods] = useState<PeriodType[]>([]);
@@ -72,17 +74,24 @@ export default function Page() {
   }, [marks, periods]);
 
   return (
-    <div className="p-4">
-      <p className="text-3xl mb-2 mt-2 font-semibold">Valutazioni</p>
+    <div className="p-4 max-w-3xl mx-auto">
       {periods.length !== 0 ? (
         <Tabs defaultValue={periods[1].periodDesc} >
-          <TabsList className="grid mb-6 w-full grid-cols-2">
-            {periods.map((period, index) => (
-              <TabsTrigger key={index} value={period.periodDesc}>{period.periodDesc}</TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="sticky top-0 z-10 shadow-xl pt-4 pb-4 bg-background">
+            <p className="text-3xl mb-2 font-semibold">Valutazioni</p>
+            <TabsList className="grid  w-full grid-cols-2">
+              {periods.map((period, index) => (
+                <TabsTrigger key={index} value={period.periodDesc}>{period.periodDesc}</TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
           {subjects.length !== 0 && periods.map((period, index) => (
-            <TabsContent ref={parent} key={index} value={period.periodDesc} className="flex flex-col gap-2">
+            <TabsContent ref={parent} key={index} value={period.periodDesc} className="flex flex-col gap-2 mt-0">
+              <div className="relative flex flex-col gap-2 items-center justify-center overflow-hidden p-4 pb-6 rounded-xl mb-4">
+                <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
+                <p className="text-lg font-semibold">Media del {periods[index].periodDesc}</p>
+                <Gauge value={parseFloat(getGradesAverage(marks[index]).toFixed(3))} size={120} />
+              </div>
               {subjects[index].filter(subject => getGradesAverage(subject.marks) < 5.5).length !== 0 && (
                 <div>
                   <p className="font-semibold text-2xl mb-1.5">Da recuperare ({subjects[index].filter(subject => getGradesAverage(subject.marks) < 5.5).length})</p>
@@ -108,21 +117,42 @@ export default function Page() {
 }
 
 function SubjectCard({ subject }: { subject: Subject }) {
+  const calculateNeededValue = (average: number, count: number) => {
+    return ((5.5 * (count + 1)) - (average * count)).toFixed(2);
+  }
   return (
-    <div className="relative flex gap-4 items-start justify-start overflow-hidden p-4 rounded-xl mb-4">
-      <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />    <div className="flex-shrink-0">
+    <Link href={`/register/marks/${subject.id}`} className="relative flex gap-4 items-start justify-start overflow-hidden p-4 rounded-xl mb-4">
+      <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
+      <div className="flex-shrink-0">
         <Gauge value={parseFloat(getGradesAverage(subject.marks).toFixed(3))} size={80} /></div>
-      <div>
+      <div className="flex-1">
         <p className="text-MD font-semibold">{subject.description.split('-')[0]}</p>
         <p className="opacity-55 text-text text-sm">
-          {getGradesAverage(subject.marks) < 5.5 ? (
-            <>Devi prendere almeno <b>{(5.5 - getGradesAverage(subject.marks)).toFixed(2)}</b> per raggiungere la sufficienza.</>
-          ) : (
-            <>Non prendere meno di <b>{(getGradesAverage(subject.marks) - 5.5).toFixed(2)}</b> per mantenere la sufficienza.</>
-          )}
+            {getGradesAverage(subject.marks) < 5.5 ? (
+            <>
+              {parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
+              <>Devi prendere almeno <b>10 e un altro voto</b> per arrivare alla sufficienza.</>
+              ) : parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) < 1 ? (
+              <>Puoi stare tranquillo.</>
+              ) : (
+              <>Devi prendere almeno <b>{calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)}</b> per raggiungere la sufficienza.</>
+              )}
+            </>
+            ) : (
+            <>
+              {parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
+              <>Non prendere meno di <b>10 e un altro voto</b> per mantenere la sufficienza.</>
+              ) : parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) < 1 ? (
+              <>Puoi stare tranquillo.</>
+              ) : (
+              <>Non prendere meno di <b>{calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)}</b> per mantenere la sufficienza.</>
+              )}
+            </>
+            )}
         </p>
       </div>
-    </div>
+      <ChevronRight className="text-secondary" />
+    </Link>
   )
 }
 

@@ -73,7 +73,7 @@ export default function Page() {
         </div>
         <div className="text-center">
           <p className="text-4xl font-bold text-accent">Autenticati</p>
-          <p className="text-secondary text-sm">SysRegister</p>
+          <p className="text-secondary text-sm">Inserisci le tue credenziali classeviva per fare l&apos;accesso</p>
         </div>
       </div>
       <div className="flex-1 flex w-full px-6 items-center flex-col justify-end">

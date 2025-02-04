@@ -10,7 +10,7 @@ import MarksPageLinkLoading, { EventsPageLinkLoading } from "./skeletons";
 
 export default async function Page() {
   return (
-    <div className="p-6 px-4">
+    <div className="p-6 px-4 max-w-3xl mx-auto"> 
       <Suspense fallback={<MarksPageLinkLoading />}>
         <MarksPageLink />
       </Suspense>
