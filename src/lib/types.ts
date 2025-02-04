@@ -29,14 +29,18 @@ export type Subject = {
 export type Subjects = Subject[];
 
 export type LessonType = {
-    id: number;
-    date: string;
-    subject: Subject;
-    teacher: Teacher;
-    startTime: string;
-    endTime: string;
-    room: string;
-    notes: string;
+    evtId: number;
+    evtDate: string;
+    evtCode: string;
+    evtHPos: number;
+    evtDuration: number;
+    classDesc: string;
+    authorName: string;
+    subjectId: number;
+    subjectCode: string;
+    subjectDesc: string;
+    lessonType: string;
+    lessonArg: string;
 }
 
 export type GradeType = {
