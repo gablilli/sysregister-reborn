@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Checkbox from "@/components/Checkbox";
 import Link from "next/link";
+import InstallPWAPrompt from "@/components/InstallPWAPrompt";
 
 export default function Home() {
   const [parent] = useAutoAnimate();
@@ -77,6 +78,7 @@ export default function Home() {
       </div>
       <div className="max-w-3xl mx-auto">
         <div className="p-4" ref={parent}>
+          <InstallPWAPrompt />
           <LessonsPageLink lessons={lessons} day={selectedDay} />
           <p className="font-semibold text-2xl mb-3">Agenda</p>
           <div className="flex gap-4 flex-col" ref={parent}>
