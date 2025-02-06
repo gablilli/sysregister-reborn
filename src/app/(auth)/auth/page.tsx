@@ -62,8 +62,6 @@ export default function Page() {
 
   return (
     <div className="flex flex-col items-center justify-center h-svh">
-      <div className="p-4 w-full">
-        <InstallPWAPrompt /></div>
       <div className="flex items-center justify-center flex-col flex-1">
         <div className="relative overflow-hidden p-9 rounded-[55px] shadow mb-6">
           <div className="bg-secondary absolute opacity-45 -z-10 top-0 right-0 bottom-0 left-0" />
@@ -80,6 +78,8 @@ export default function Page() {
         </div>
       </div>
       <div className="flex-1 flex w-full px-6 items-center flex-col justify-end">
+        <div className="p-4 px-0 w-full">
+          <InstallPWAPrompt /></div>
         <form
           className="w-full"
           onSubmit={async (e) => {
