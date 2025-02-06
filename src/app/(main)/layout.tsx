@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} overflow-x-hidden antialiased bg-background text-text`}
+        className={`${inter.className} overflow-x-hidden antialiased dark bg-background text-text`}
       >
         <Suspense>
           <div className="p-6 relative">

@@ -1,6 +1,7 @@
+"use client";
 import { LessonType } from "@/lib/types";
 import { getDayLessons } from "./actions";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const formatDate = (dateString: string) => {
   const months = [
@@ -15,10 +16,17 @@ const formatDate = (dateString: string) => {
   return `${date.getDate()} ${months[date.getMonth()]}`;
 };
 
-const Page = async ({ params }: { params: { day: string }; }) => {
+const Page = ({ params }: { params: { day: string }; }) => {
   const day = params.day;
   const formattedDate = day ? formatDate(day) : '';
-  const lessonsData: LessonType[] = await getDayLessons(day);
+  const [lessonsData, setLessonsData] = useState<LessonType[]>([]);
+
+  useEffect(() => {
+    async function getLessonData() {
+      setLessonsData(await getDayLessons(day));
+    }
+    getLessonData();
+  });
 
   const lessons: LessonType[] = lessonsData.reduce((acc: LessonType[], lesson: LessonType) => {
     const existingLesson = acc.find(l => l.evtHPos === lesson.evtHPos && l.subjectDesc === lesson.subjectDesc);

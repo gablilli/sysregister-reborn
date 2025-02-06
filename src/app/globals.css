@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* :root {
   --text: #1b0e0e;
   --background: #f7eeee;
   --primary: #cc0f0f;
   --secondary: #d68080;
   --accent: #d68080;
-}
-
+} */
+/* 
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #f1e4e4;
@@ -18,6 +18,14 @@
     --secondary: #7f2929;
     --accent: #c83737;
   }
+} */
+
+:root {
+  --text: #f1e4e4;
+  --background: #130909;
+  --primary: #f03333;
+  --secondary: #7f2929;
+  --accent: #c83737;
 }
 
 body {

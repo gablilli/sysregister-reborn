@@ -13,7 +13,7 @@ async function handleAuthError(response: Response) {
         cookies().delete("token");
         cookies().delete("tokenExpiry");
         cookies().delete("uid");
-        redirect("/auth");
+        redirect(`/auth`);
     }
 }
 

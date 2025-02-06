@@ -1,16 +1,16 @@
+"use client";
 import Gauge from "@/components/Metrics/Gauge";
 import Line from "@/components/Metrics/Line";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { GradeType, PeriodType } from "@/lib/types";
-import { get } from "@/lib/api";
-import { cookies } from "next/headers";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import MarksPageLinkLoading, { EventsPageLinkLoading } from "./skeletons";
+import { getMarks, getPeriods } from "./actions";
 
-export default async function Page() {
+export default function Page() {
   return (
-    <div className="p-6 px-4 max-w-3xl mx-auto"> 
+    <div className="p-6 px-4 max-w-3xl mx-auto">
       <Suspense fallback={<MarksPageLinkLoading />}>
         <MarksPageLink />
       </Suspense>
@@ -21,12 +21,24 @@ export default async function Page() {
   );
 }
 
-async function MarksPageLink() {
-  const studentId = cookies().get("uid")?.value;
-  const marks: GradeType[] = (await get(`/v1/students/${studentId}/grades`))
-    .grades;
-  const periods: PeriodType[] = (await get(`/v1/students/${studentId}/periods`))
-    .periods;
+function MarksPageLink() {
+  const [marks, setMarks] = useState<GradeType[]>([]);
+  const [periods, setPeriods] = useState<PeriodType[]>([]);
+
+  useEffect(() => {
+    async function getMarksData() {
+      setMarks(await getMarks());
+    }
+    getMarksData();
+  }, []);
+
+  useEffect(() => {
+    async function getPeriodsData() {
+      setPeriods(await getPeriods());
+    }
+    getPeriodsData();
+  }, []);
+
   const totalAverage =
     marks
       .filter((mark) => mark.color !== "blue")
@@ -38,9 +50,10 @@ async function MarksPageLink() {
     );
     return (
       periodMarks.reduce((acc, mark) => acc + mark.decimalValue, 0) /
-        periodMarks.length || 0
+      periodMarks.length || 0
     );
   });
+  if (!marks.length || !periods.length || !periodsAverages || !totalAverage) return <MarksPageLinkLoading />;
   return (
     <Link
       href={`/register/marks`}

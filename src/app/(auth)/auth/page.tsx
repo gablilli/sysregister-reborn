@@ -5,9 +5,10 @@ import Button from "@/components/Button";
 import { Input, InputLabel } from "@/components/Input";
 import { useCallback, useEffect, useState } from "react";
 import { getUserSession } from "./actions";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
 export default function Page() {
+  const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
@@ -32,14 +33,19 @@ export default function Page() {
         if (error) {
           showError(error);
         } else {
-          router.push("/");
+          if (goTo) {
+            router.push(goTo);
+          } else {
+            router.push("/");
+
+          }
         }
       } catch {
         return;
       }
       setLoading(false);
     },
-    [router]
+    [goTo, router]
   );
 
   useEffect(() => {
