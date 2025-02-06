@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function MarksPageLinkLoading() {
   return (
     <Link
-      href={`#`}
+      href={`/register/marks`}
       className="rounded-xl flex flex-col opacity-40 overflow-hidden mb-4 relative p-4 py-3"
     >
       <div className="absolute top-0 left-0 right-0 ease-in-out bottom-0 animate-pulse bg-secondary z-10" />

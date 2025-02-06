@@ -12,7 +12,7 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Area, AreaChart, XAxis } from "recharts";
+import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 
@@ -125,8 +125,8 @@ function TrendGraph({ marks }: { marks: GradeType[] }) {
         media: averageMark,
     }));
     if (chartData.length > 0) {
-        chartData.unshift({ ...chartData[0], day: new Date(new Date(chartData[0].day).setDate(new Date(chartData[0].day).getDate() - 1)).toLocaleDateString() });
-        chartData.push({ ...chartData[chartData.length - 1], day: new Date(new Date(chartData[chartData.length - 1].day).setDate(new Date(chartData[chartData.length - 1].day).getDate() + 1)).toLocaleDateString() });
+        chartData.unshift({ ...chartData[0], day: new Date(new Date(chartData[0].day).setDate(new Date(chartData[0].day).getDate() - 1)).toISOString() });
+        chartData.push({ ...chartData[chartData.length - 1], day: new Date(new Date(chartData[chartData.length - 1].day).setDate(new Date(chartData[chartData.length - 1].day).getDate() + 1)).toISOString() });
     }
     if (chartData.length === 0) return null;
     return (
@@ -135,7 +135,7 @@ function TrendGraph({ marks }: { marks: GradeType[] }) {
             <ChartContainer config={chartConfig}>
                 <AreaChart
                     accessibilityLayer
-                    margin={{ top: 0, right: -10, left: -10, bottom: 0 }}
+                    margin={{ top: 0, right: -20, left: -20, bottom: 0 }}
                     data={chartData}
                 >
                     <XAxis
@@ -146,6 +146,7 @@ function TrendGraph({ marks }: { marks: GradeType[] }) {
                         tick={{ fill: 'var(--accent)' }}
                         tickFormatter={(value) => new Date(value).toLocaleDateString()}
                     />
+                    <YAxis width={0} domain={[Math.min(...chartData.map(data => data.mark)) - 2, Math.max(...chartData.map(data => data.mark)) + 1]}/>
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent indicator="line" />}
@@ -178,7 +179,7 @@ function MarksDetails({ marks }: { marks: GradeType[] }) {
         <Tabs defaultValue={periods[0]} className="min-h-[80svh]" >
             <div className="sticky top-0 z-10 shadow-xl pt-4 pb-2 bg-background">
                 <p className="text-xl mb-1 font-semibold">Valutazioni</p>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className={`grid w-full grid-cols-${periods.length}`}>
                     {periods.map((period, index) => (
                         <TabsTrigger key={index} value={period}>{period}</TabsTrigger>
                     ))}

@@ -55,17 +55,16 @@ export default function DaySelector({
             }
           >
             <p className="text-secondary w-full pb-2 text-center px-2 justify-between text-sm">
-                {day.toLocaleString("it-IT", { weekday: "short" }).slice(0, 1).toUpperCase() + day.toLocaleString("it-IT", { weekday: "short" }).slice(1, 3)}
+              {day.toLocaleString("it-IT", { weekday: "short" }).slice(0, 1).toUpperCase() + day.toLocaleString("it-IT", { weekday: "short" }).slice(1, 3)}
             </p>
             <div
-              className={`text-accent text-center text-lg font-semibold flex items-center justify-center w-10 h-10 p-2.5 rounded-full transition-all ${
-                day.toDateString() === currentDay.toDateString()
-
+              className={`text-accent relative text-center text-lg font-semibold flex items-center justify-center w-10 h-10 p-2.5 rounded-full transition-all ${day.toDateString() === currentDay.toDateString()
                   ? "bg-primary text-white"
                   : "bg-primary-light"
-              }`}
+                }`}
             >
               {day.getDate()}
+              {day.toDateString() === new Date().toDateString() && (<div className="absolute left-1/2 bottom-0 rounded-full -translate-x-1/2 w-1.5 h-1.5 bg-primary" />)}
             </div>
           </button>
         ))}
