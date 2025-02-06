@@ -82,3 +82,31 @@ export type PeriodType = {
     dateEnd: string;
     miurDivisionCode: string | null;
 }
+
+export type AttachmentType = {
+    fileName: string;
+    attachNum: number;
+}
+
+export type BachecaType = {
+    pubId: number;
+    pubDT: string;
+    readStatus: boolean;
+    evtCode: string;
+    cntId: number;
+    cntValidFrom: string;
+    cntValidTo: string;
+    cntValidInRange: boolean;
+    cntStatus: string;
+    cntTitle: string;
+    cntCategory: string;
+    cntHasChanged: boolean;
+    cntHasAttach: boolean;
+    needJoin: boolean;
+    needReply: boolean;
+    needFile: boolean;
+    needSign: boolean;
+    evento_id: string;
+    dinsert_allegato: string;
+    attachments: AttachmentType[];
+}

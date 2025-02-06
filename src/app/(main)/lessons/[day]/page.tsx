@@ -26,7 +26,7 @@ const Page = ({ params }: { params: { day: string }; }) => {
       setLessonsData(await getDayLessons(day));
     }
     getLessonData();
-  });
+  }, [day]);
 
   const lessons: LessonType[] = lessonsData.reduce((acc: LessonType[], lesson: LessonType) => {
     const existingLesson = acc.find(l => l.evtHPos === lesson.evtHPos && l.subjectDesc === lesson.subjectDesc);
@@ -45,9 +45,8 @@ const Page = ({ params }: { params: { day: string }; }) => {
           <p className="text-2xl font-semibold mb-3 mt-3">Lezioni del {formattedDate}</p>
           <div>
             {lessons && lessons.map((lesson, index) => (
-              <>
+              <div key={index}>
                 <LessonItem
-                  key={index}
                   subject={lesson.subjectDesc}
                   teachers={lesson.authorName}
                   time={lesson.evtHPos.toString()}
@@ -63,7 +62,7 @@ const Page = ({ params }: { params: { day: string }; }) => {
                   }
                 />
                 {(lessons[index + 1] && lessons[index + 1].evtHPos !== lesson.evtHPos) && <div className="h-8 border border-dashed w-[1px] opacity-50 mx-auto" />}
-              </>
+              </div>
             ))}
           </div></div>
       </Suspense>
