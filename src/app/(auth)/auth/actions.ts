@@ -1,17 +1,28 @@
 "use server";
-
-import { post } from "@/lib/api";
 import { cookies } from "next/headers";
-
 export async function getUserSession({ uid, pass }: { uid: string, pass: string }) {
-    const loginResponse: { token: string, ident: string, expire: string } = await post("/v1/auth/login", {
-        uid,
-        pass
-    });
-    if (!loginResponse.token) {
+    if (!uid || !pass) {
         return "Credenziali non valide.";
     }
-    cookies().set("tokenExpiry", loginResponse.expire);
-    cookies().set("token", loginResponse.token);
-    cookies().set("uid", (loginResponse.ident).slice(1, -1));
+
+    const formData = new FormData();
+    formData.append("uid", uid);
+    formData.append("pwd", pass);
+    const req = await fetch(`https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd`, {
+        method: "POST",
+        body: formData
+    });
+
+    const setCookies = req.headers.get("set-cookie")?.split("; ");
+    const expiry = req.headers.get("expires");
+    const token = setCookies?.find(cookie => cookie.startsWith("HttpOnly, PHPSESSID="))?.split("=")[1];
+
+
+    if (!token || !expiry) {
+        return "Credenziali non valide.";
+    }
+
+    cookies().set("tokenExpiry", new Date(expiry).toISOString());
+    cookies().set("token", token);
+    cookies().set("uid", uid);
 }

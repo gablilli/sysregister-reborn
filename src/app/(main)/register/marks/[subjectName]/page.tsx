@@ -1,8 +1,7 @@
 "use client";
 
-import { GradeType, Subject, Subjects } from "@/lib/types";
+import { GradeType, Subject } from "@/lib/types";
 import { useEffect, useState } from "react";
-import { fetchMarks, fetchSubjects } from "../actions";
 import { useParams } from "next/navigation";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Gauge from "@/components/Metrics/Gauge";
@@ -15,37 +14,38 @@ import {
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { getMarks, getSubject } from "../../actions";
 
 
 export default function Page() {
-    const subjectId = useParams().subjectId;
+    const subjectName = useParams().subjectName;
     const [subject, setSubject] = useState<Subject>();
     const [marks, setMarks] = useState<GradeType[]>([]);
 
     useEffect(() => {
         async function getSubjectInfo() {
-            const subjects: Subjects = await fetchSubjects();
-            const subject = subjects.find(subject => subject.id.toString() === subjectId);
-            setSubject(subject as Subject);
+            const subjectData = await getSubject(subjectName as string) as Subject;
+            setSubject(subjectData);
         }
         getSubjectInfo();
-    }, [subjectId]);
+    }, [subjectName]);
 
     useEffect(() => {
         async function getSubjectMarks() {
-            const marks: GradeType[] = await fetchMarks();
-            const filteredMarks = marks.filter(mark => mark.subjectId.toString() === subjectId);
+            const marks: GradeType[] = await getMarks() || [];
+            const filteredMarks = marks.filter(mark => mark.subjectDesc === decodeURIComponent(subjectName as string));
+
             setMarks(filteredMarks);
         }
         getSubjectMarks();
-    }, [subjectId]);
+    }, [subjectName]);
 
     if (marks.length === 0) return null;
     return (
         <div className="mx-auto max-w-3xl p-4">
             <div className="mb-2 mt-2">
-                <p className="text-3xl font-semibold">{subject?.description.split("-")[0]}</p>
-                <p className="opacity-70 text-accent">{subject?.teachers.map(teacher => teacher.teacherName).join(", ")}</p></div>
+                <p className="text-3xl font-semibold">{subject?.name}</p>
+                <p className="opacity-70 text-accent">{subject?.teachers.join(", ")}</p></div>
             <div className="mt-4 mb-2">
                 <p className="text-xl mb-1 font-semibold">Media</p>
                 <PeriodAverages marks={marks} />
@@ -125,8 +125,8 @@ function TrendGraph({ marks }: { marks: GradeType[] }) {
         media: averageMark,
     }));
     if (chartData.length > 0) {
-        chartData.unshift({ ...chartData[0], day: new Date(new Date(chartData[0].day).setDate(new Date(chartData[0].day).getDate() - 1)).toISOString() });
-        chartData.push({ ...chartData[chartData.length - 1], day: new Date(new Date(chartData[chartData.length - 1].day).setDate(new Date(chartData[chartData.length - 1].day).getDate() + 1)).toISOString() });
+        chartData.unshift({ ...chartData[0], day: chartData[0].day });
+        chartData.push({ ...chartData[chartData.length - 1], day: chartData[chartData.length - 1].day });
     }
     if (chartData.length === 0) return null;
     return (
@@ -144,9 +144,8 @@ function TrendGraph({ marks }: { marks: GradeType[] }) {
                         axisLine={false}
                         tickMargin={8}
                         tick={{ fill: 'var(--accent)' }}
-                        tickFormatter={(value) => new Date(value).toLocaleDateString()}
                     />
-                    <YAxis width={0} domain={[Math.min(...chartData.map(data => data.mark)) - 2, Math.max(...chartData.map(data => data.mark)) + 1]}/>
+                    <YAxis width={0} domain={[Math.min(...chartData.map(data => data.mark)) - 2, Math.max(...chartData.map(data => data.mark)) + 1]} />
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent indicator="line" />}
@@ -208,15 +207,16 @@ function MarksDetails({ marks }: { marks: GradeType[] }) {
                                     </div>
                                     <div className="">
                                         <p className="font-semibold">{mark.componentDesc ? mark.componentDesc : "Voto di prova"}</p>
-                                        <p className="opacity-60 text-sm">{new Date(mark.evtDate).toLocaleDateString()}</p>
+                                        <p className="opacity-60 text-sm">{mark.evtDate}</p>
                                     </div>
                                 </div>
-                                {mark.notesForFamily && (
+                                {/* {mark.notesForFamily && (
                                     <div className="flex items-center mt-2 relative p-4 rounded-lg overflow-hidden">
                                         <div className="bg-secondary -z-10 opacity-30 absolute top-0 bottom-0 left-0 right-0" />
                                         <span className="whitespace-pre-wrap">{mark.notesForFamily}</span>
                                     </div>
-                                )}</div>
+                                )} */}
+                            </div>
                         ))}
                     </div>
                 </TabsContent>))}

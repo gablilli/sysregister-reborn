@@ -32,11 +32,17 @@ export default function Home() {
       "completedAgenda",
       JSON.stringify(updatedCompletedAgenda)
     );
-    const updatedAgenda: AgendaItemType[] = agenda.map((item) => ({
-      ...item,
-      completed: updatedCompletedAgenda.includes(item.evtId),
-    }));
-    setAgenda(updatedAgenda);
+    setAgenda((prevAgenda) =>
+      prevAgenda.map((item) => {
+        if (Number(item.id) === evtId) {
+          return {
+            ...item,
+            completed: updatedCompletedAgenda.includes(Number(item.id)),
+          };
+        }
+        return item;
+      })
+    );
   }
 
   useEffect(() => {
@@ -53,7 +59,7 @@ export default function Home() {
       const updatedAgenda: AgendaItemType[] = agenda.map(
         (item: AgendaItemType) => ({
           ...item,
-          completed: completedAgenda.includes(item.evtId),
+          completed: completedAgenda.includes(Number(item.id)),
         })
       );
       setAgenda(updatedAgenda);
@@ -98,22 +104,22 @@ export default function Home() {
                   <AgendaItem
                     key={index}
                     completed={item.completed as boolean}
-                    author={item.authorName}
+                    author={item.autore_desc}
                     toggleCompletedAgenda={() =>
-                      toggleCompletedAgenda(item.evtId)
+                      toggleCompletedAgenda(Number(item.id))
                     }
                     time={
-                      new Date(item.evtDatetimeBegin).toLocaleTimeString([], {
+                      new Date(item.start).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       }) +
                       " - " +
-                      new Date(item.evtDatetimeEnd).toLocaleTimeString([], {
+                      new Date(item.end).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })
                     }
-                    content={item.notes}
+                    content={item.title}
                   />
                 ))}
             {!agendaLoading &&
@@ -124,22 +130,22 @@ export default function Home() {
                   <AgendaItem
                     key={index}
                     completed={item.completed as boolean}
-                    author={item.authorName}
+                    author={item.autore_desc}
                     toggleCompletedAgenda={() =>
-                      toggleCompletedAgenda(item.evtId)
+                      toggleCompletedAgenda(Number(item.id))
                     }
                     time={
-                      new Date(item.evtDatetimeBegin).toLocaleTimeString([], {
+                      new Date(item.start).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       }) +
                       " - " +
-                      new Date(item.evtDatetimeEnd).toLocaleTimeString([], {
+                      new Date(item.start).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })
                     }
-                    content={item.notes}
+                    content={item.title}
                   />
                 ))}
           </div>
@@ -212,7 +218,7 @@ function LessonsPageLink({
     "Dicembre",
   ];
 
-  if (lessons && lessons.length === 0) {
+  if (lessons && lessons.length === 0 || !lessons) {
     return null;
   }
 

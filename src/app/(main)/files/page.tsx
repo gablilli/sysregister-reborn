@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getBacheca } from "./actions";
 import { useEffect, useState } from "react";
 import { BachecaType } from "@/lib/types";
+import Wip from "@/components/Wip";
 
 export default function Page() {
   const [bachecaLoading, setBachecaLoading] = useState(true);
@@ -18,7 +19,7 @@ export default function Page() {
     getBachecaItems();
   }, []);
 
-
+  return <Wip />;
   return (
     <div className="p-4 py-6 max-w-3xl mx-auto flex flex-col gap-5">
       {bachecaLoading ? (

@@ -1,86 +1,64 @@
 export type AgendaItemType = {
-    evtId: number;
-    evtCode: string;
-    evtDatetimeBegin: string;
-    evtDatetimeEnd: string;
-    isFullDay: boolean;
-    notes: string;
-    authorName: string;
-    classDesc: string;
-    subjectId: number;
-    subjectDesc: string;
-    homeworkId: number | null;
+    id: string;
+    title: string;
+    start: string;
+    end: string;
+    allDay: boolean;
+    data_inserimento: string;
+    nota_2: string;
+    master_id: string | null;
+    classe_id: string;
+    classe_desc: string;
+    gruppo: number;
+    autore_desc: string;
+    autore_id: string;
+    tipo: string;
+    materia_desc: string | null;
+    materia_id: string | null;
+    id_compito: string | null;
     completed?: boolean;
-}
-
-export type Teacher = {
-    teacherId: string;
-    teacherName: string;
 }
 
 export type Subject = {
     id: number;
-    description: string;
-    order: number;
-    teachers: Teacher[];
-    marks: GradeType[];
+    name: string;
+    teachers: string[];
+    marks?: GradeType[]; 
 }
 
 export type Subjects = Subject[];
 
 export type LessonType = {
-    evtId: number;
-    evtDate: string;
-    evtCode: string;
-    evtHPos: number;
-    evtDuration: number;
-    classDesc: string;
-    authorName: string;
-    subjectId: number;
-    subjectCode: string;
-    subjectDesc: string;
-    lessonType: string;
-    lessonArg: string;
+    docente: string;
+    classe_desc: string;
+    materia_desc: string;
+    materia_codice: string;
+    attivita: string;
+    argomento: string;
+    ora: string;
+    stato_ora: string;
+    stato_ora_desc: string;
+    bg_color_stato: string;
+    font_color_stato: string;
+    allegati: AttachmentType[];
 }
 
 export type GradeType = {
     subjectId: number;
-    subjectCode: string;
     subjectDesc: string;
     evtId: number;
-    evtCode: string;
     evtDate: string;
     decimalValue: number;
     displayValue: string;
-    displaPos: number;
-    notesForFamily: string;
     color: string;
-    canceled: boolean;
-    underlined: boolean;
-    periodPos: number;
     periodDesc: string;
-    componentPos: number;
     componentDesc: string;
-    weightFactor: number;
-    skillId: number;
-    gradeMasterId: number;
-    skillDesc: string | null;
-    skillCode: string | null;
-    skillMasterId: number;
-    skillValueDesc: string;
-    skillValueShortDesc: string | null;
-    oldskillId: number;
-    oldskillDesc: string;
 }
 
 export type PeriodType = {
     periodCode: string;
     periodPos: number;
     periodDesc: string;
-    isFinal: boolean;
-    dateStart: string;
-    dateEnd: string;
-    miurDivisionCode: string | null;
 }
 
 export type AttachmentType = {
