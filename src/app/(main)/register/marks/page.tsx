@@ -23,15 +23,28 @@ export default function Page() {
 
   useEffect(() => {
     async function fetchPeriods() {
-      const periods = await getPeriods() as PeriodType[];
-      setPeriods(periods);
+      const periodsStore = window.sessionStorage.getItem("periods");
+      if (periodsStore) {
+        setPeriods(JSON.parse(periodsStore));
+      } else {
+        const periods = await getPeriods() as PeriodType[];
+        setPeriods(periods);
+        window.sessionStorage.setItem("periods", JSON.stringify(periods));
+      }
     }
     fetchPeriods();
   }, []);
   useEffect(() => {
     async function fetchPeriodsMarks() {
-      if (periods.length === 0) return;
-      const marks: GradeType[] = await getMarks() as GradeType[];
+      const marksStore = window.sessionStorage.getItem("marks");
+      let marks: GradeType[];
+      if (marksStore) {
+        marks = JSON.parse(marksStore);
+      } else {
+        marks = await getMarks() as GradeType[];
+        window.sessionStorage.setItem("marks", JSON.stringify(marks));
+      }
+      if (periods.length === 0 || !marks) return;
       const sortedMarks: GradeType[][] = [];
       for (let i = 0; i < periods.length; i++) {
         const periodMarks = marks.filter(m => m.periodDesc === periods[i].periodDesc)
@@ -123,33 +136,33 @@ function SubjectCard({ subject }: { subject: Subject }) {
     <Link href={`/register/marks/${subject.name}`} className="relative flex gap-4 items-start justify-start overflow-hidden p-4 rounded-xl mb-4">
       <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
       <div className="flex-shrink-0">
-      {subject.marks && <Gauge value={parseFloat(getGradesAverage(subject.marks).toFixed(3))} size={80} />}
+        {subject.marks && <Gauge value={parseFloat(getGradesAverage(subject.marks).toFixed(3))} size={80} />}
       </div>
       <div className="flex-1">
-      <p className="text-MD font-semibold">{subject.name.split('-')[0]}</p>
-      <p className="opacity-55 text-text text-sm">
-        {subject.marks && getGradesAverage(subject.marks) < 5.5 ? (
-        <>
-          {parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
-          <>Devi prendere almeno <b>10 e un altro voto</b> per arrivare alla sufficienza.</>
-          ) : parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) < 1 ? (
-          <>Puoi stare tranquillo.</>
+        <p className="text-MD font-semibold">{subject.name.split('-')[0]}</p>
+        <p className="opacity-55 text-text text-sm">
+          {subject.marks && getGradesAverage(subject.marks) < 5.5 ? (
+            <>
+              {parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
+                <>Devi prendere almeno <b>10 e un altro voto</b> per arrivare alla sufficienza.</>
+              ) : parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) < 1 ? (
+                <>Puoi stare tranquillo.</>
+              ) : (
+                <>Devi prendere almeno <b>{calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)}</b> per raggiungere la sufficienza.</>
+              )}
+            </>
           ) : (
-          <>Devi prendere almeno <b>{calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)}</b> per raggiungere la sufficienza.</>
+            <>
+              {subject.marks && parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
+                <>Non prendere meno di <b>10 e un altro voto</b> per mantenere la sufficienza.</>
+              ) : subject.marks && parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) < 1 ? (
+                <>Puoi stare tranquillo.</>
+              ) : (
+                <>Non prendere meno di <b>{calculateNeededValue(getGradesAverage(subject.marks || []), subject.marks?.length || 0)}</b> per mantenere la sufficienza.</>
+              )}
+            </>
           )}
-        </>
-        ) : (
-        <>
-          {subject.marks && parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
-          <>Non prendere meno di <b>10 e un altro voto</b> per mantenere la sufficienza.</>
-          ) : subject.marks && parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) < 1 ? (
-          <>Puoi stare tranquillo.</>
-          ) : (
-          <>Non prendere meno di <b>{calculateNeededValue(getGradesAverage(subject.marks || []), subject.marks?.length || 0)}</b> per mantenere la sufficienza.</>
-          )}
-        </>
-        )}
-      </p>
+        </p>
       </div>
       <ChevronRight className="text-secondary" />
     </Link>

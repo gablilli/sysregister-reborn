@@ -51,19 +51,26 @@ export default function Home() {
     setAgenda([]);
 
     async function fetchDayAgenda() {
-      setAgendaLoading(true);
-      const agenda = await getDayAgenda(selectedDay);
-      const completedAgenda = JSON.parse(
-        localStorage.getItem("completedAgenda") || "[]"
-      );
-      const updatedAgenda: AgendaItemType[] = agenda.map(
-        (item: AgendaItemType) => ({
-          ...item,
-          completed: completedAgenda.includes(Number(item.id)),
-        })
-      );
-      setAgenda(updatedAgenda);
-      setAgendaLoading(false);
+      const agendaStore = window.sessionStorage.getItem("agenda");
+      if (agendaStore && JSON.parse(agendaStore).day === selectedDay.toDateString()) {
+        setAgenda(JSON.parse(agendaStore).agenda);
+        setAgendaLoading(false);
+      } else {
+        setAgendaLoading(true);
+        const agenda = await getDayAgenda(selectedDay);
+        const completedAgenda = JSON.parse(
+          localStorage.getItem("completedAgenda") || "[]"
+        );
+        const updatedAgenda: AgendaItemType[] = agenda.map(
+          (item: AgendaItemType) => ({
+            ...item,
+            completed: completedAgenda.includes(Number(item.id)),
+          })
+        );
+        setAgenda(updatedAgenda);
+        window.sessionStorage.setItem("agenda", JSON.stringify({agenda: updatedAgenda, day: selectedDay}));
+        setAgendaLoading(false);
+      }
     }
 
     async function fetchLessons() {

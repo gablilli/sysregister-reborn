@@ -4,12 +4,17 @@ import { JSDOM } from "jsdom";
 import { GradeType, PeriodType, Subject } from "@/lib/types";
 import { handleAuthError } from "@/lib/api";
 
-export async function getPeriods() {
-    const page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
-        headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
-        },
-    })).text();
+export async function getPeriods(inputPage?: string) {
+    let page;
+    if (inputPage) {
+        page = inputPage;
+    } else {
+        page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
+            headers: {
+                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            },
+        })).text();
+    }
     const dom = new JSDOM(page);
     try {
         const periodsContainer = dom.window.document.querySelector("ul");
@@ -39,12 +44,17 @@ const markTable: { [key: string]: number } = {
     "10-": 9.75, "10": 10
 };
 
-export async function getMarks() {
-    const page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
-        headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
-        },
-    })).text();
+export async function getMarks(inputPage?: string) {
+    let page;
+    if (inputPage) {
+        page = inputPage;
+    } else {
+        page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
+            headers: {
+                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            },
+        })).text();
+    }
     const dom = new JSDOM(page);
 
     try {
@@ -108,4 +118,16 @@ export async function getSubject(subjectName: string) {
     } catch {
         handleAuthError();
     }
+}
+
+// combined functions
+export async function getMarksAndPeriods() {
+    const page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
+        headers: {
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+        },
+    })).text();
+    const marks = await getMarks(page);
+    const periods = await getPeriods(page);
+    return { marks, periods };
 }

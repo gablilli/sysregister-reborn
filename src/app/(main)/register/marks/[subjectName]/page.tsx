@@ -1,6 +1,6 @@
 "use client";
 
-import { GradeType, Subject } from "@/lib/types";
+import { GradeType } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -14,27 +14,23 @@ import {
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { getMarks, getSubject } from "../../actions";
+import { getMarks } from "../../actions";
 
 
 export default function Page() {
     const subjectName = useParams().subjectName;
-    const [subject, setSubject] = useState<Subject>();
     const [marks, setMarks] = useState<GradeType[]>([]);
-
-    useEffect(() => {
-        async function getSubjectInfo() {
-            const subjectData = await getSubject(subjectName as string) as Subject;
-            setSubject(subjectData);
-        }
-        getSubjectInfo();
-    }, [subjectName]);
-
     useEffect(() => {
         async function getSubjectMarks() {
-            const marks: GradeType[] = await getMarks() || [];
+            const marksStore = window.sessionStorage.getItem("marks");
+            let marks: GradeType[];
+            if (marksStore) {
+                marks = JSON.parse(marksStore);
+            } else {
+                marks = await getMarks() as GradeType[];
+                window.sessionStorage.setItem("marks", JSON.stringify(marks));
+            }
             const filteredMarks = marks.filter(mark => mark.subjectDesc === decodeURIComponent(subjectName as string));
-
             setMarks(filteredMarks);
         }
         getSubjectMarks();
@@ -44,8 +40,8 @@ export default function Page() {
     return (
         <div className="mx-auto max-w-3xl p-4">
             <div className="mb-2 mt-2">
-                <p className="text-3xl font-semibold">{subject?.name}</p>
-                <p className="opacity-70 text-accent">{subject?.teachers.join(", ")}</p></div>
+                <p className="text-3xl font-semibold">{decodeURIComponent(subjectName as string)}</p>
+            </div>
             <div className="mt-4 mb-2">
                 <p className="text-xl mb-1 font-semibold">Media</p>
                 <PeriodAverages marks={marks} />

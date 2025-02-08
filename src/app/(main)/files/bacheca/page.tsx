@@ -24,8 +24,14 @@ export default function Page() {
 
     useEffect(() => {
         async function getBachecaItems() {
-            const res: BachecaResponse = await getBacheca();
-            setBacheca(res);
+            const storedBacheca = window.sessionStorage.getItem('bacheca');
+            if (storedBacheca) {
+                setBacheca(JSON.parse(storedBacheca));
+            } else {
+                const res: BachecaResponse = await getBacheca();
+                setBacheca(res);
+                window.sessionStorage.setItem('bacheca', JSON.stringify(res));
+            }
             setBachecaLoading(false);
         }
         getBachecaItems();

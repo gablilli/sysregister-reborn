@@ -6,7 +6,7 @@ import Link from "next/link";
 import { GradeType, PeriodType } from "@/lib/types";
 import { Suspense, useEffect, useState } from "react";
 import MarksPageLinkLoading, { EventsPageLinkLoading } from "./skeletons";
-import { getMarks, getPeriods } from "./actions";
+import { getMarksAndPeriods } from "./actions";
 
 export default function Page() {
   return (
@@ -26,19 +26,21 @@ function MarksPageLink() {
   const [periods, setPeriods] = useState<PeriodType[]>([]);
 
   useEffect(() => {
-    async function getMarksData() {
-      const marksData = await getMarks();
-      setMarks(marksData || []);
+    async function getMarksAndPeriodsData() {
+      const marksStore = window.sessionStorage.getItem("marks");
+      const periodsStore = window.sessionStorage.getItem("periods");
+      if (marksStore && periodsStore) {
+        setMarks(JSON.parse(marksStore));
+        setPeriods(JSON.parse(periodsStore));
+      } else {
+        const fullData = await getMarksAndPeriods();
+        setMarks(fullData.marks || []);
+        setPeriods(fullData.periods || []);
+        window.sessionStorage.setItem("marks", JSON.stringify(fullData.marks));
+        window.sessionStorage.setItem("periods", JSON.stringify(fullData.periods));
+      }
     }
-    getMarksData();
-  }, []);
-
-  useEffect(() => {
-    async function getPeriodsData() {
-      const periodsData = await getPeriods();
-      setPeriods(periodsData || []);
-    }
-    getPeriodsData();
+    getMarksAndPeriodsData();
   }, []);
 
   const totalAverage =
