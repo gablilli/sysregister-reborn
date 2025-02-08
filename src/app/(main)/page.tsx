@@ -68,7 +68,7 @@ export default function Home() {
           })
         );
         setAgenda(updatedAgenda);
-        window.sessionStorage.setItem("agenda", JSON.stringify({agenda: updatedAgenda, day: selectedDay}));
+        window.sessionStorage.setItem("agenda", JSON.stringify({ agenda: updatedAgenda, day: selectedDay }));
         setAgendaLoading(false);
       }
     }
@@ -177,7 +177,6 @@ function AgendaItem({
 }) {
   return (
     <div
-      onClick={() => toggleCompletedAgenda()}
       className={`rounded-xl transition-all ${completed ? "opacity-45" : "opacity-100"
         } overflow-hidden relative p-4`}
     >
@@ -193,7 +192,9 @@ function AgendaItem({
             <span className="opacity-50 text-sm">{time}</span>
           </div>
         </div>
-        <Checkbox checked={completed} onChange={() => null} />
+        <div onClick={() => toggleCompletedAgenda()}>
+          <Checkbox checked={completed} onChange={() => null} />
+        </div>
       </div>
       <div className="relative overflow-hidden p-2 rounded-md mt-3">
         <div className="absolute bg-accent -z-10 opacity-35 top-0 left-0 right-0 bottom-0" />
