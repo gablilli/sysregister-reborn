@@ -4,29 +4,36 @@ import Link from "next/link";
 import { getBacheca } from "./actions";
 import { useEffect, useState } from "react";
 import { BachecaType } from "@/lib/types";
-import Wip from "@/components/Wip";
+import InstallPWAPrompt from "@/components/InstallPWAPrompt";
+
+type BachecaResponse = {
+  read: BachecaType[];
+  msg_new: BachecaType[];
+}
 
 export default function Page() {
   const [bachecaLoading, setBachecaLoading] = useState(true);
-  const [bacheca, setBacheca] = useState<BachecaType[]>([]);
+  const [bacheca, setBacheca] = useState<BachecaResponse>();
 
   useEffect(() => {
     async function getBachecaItems() {
-      const res: BachecaType[] = await getBacheca();
-      setBacheca(res.filter((item) => item.readStatus === false));
+      const res: BachecaResponse = await getBacheca();
+      setBacheca(res);
       setBachecaLoading(false);
     }
     getBachecaItems();
   }, []);
 
-  return <Wip />;
   return (
     <div className="p-4 py-6 max-w-3xl mx-auto flex flex-col gap-5">
+      <InstallPWAPrompt />
       {bachecaLoading ? (
-        <BigPageLinkSkeleton href="#" />) : (
-        <BigPageLink label="Bacheca" description={bacheca.length === 0 ? `Tutto ok, niente da leggere.` : `Hai ${bacheca.length} messaggi da leggere`} href="#" />)
+        <BigPageLinkSkeleton href="/files/bacheca" />) : (
+        <BigPageLink label="Bacheca" description={bacheca?.msg_new ? `Hai ${bacheca?.msg_new.length} messaggi da leggere` : `Tutto ok, niente da leggere.`} href="/files/bacheca" />)
       }
-      <SmallPageLink label="Didattica" description="Contenuti caricati dai professori" href="#" />
+      <div className="opacity-30 flex flex-col gap-5">
+        <BigPageLink label="Compiti" description={`Funzionalitá presto disponibile...`} href="#" />
+        <SmallPageLink label="Didattica" description="Funzionalitá Presto disponibile..." href="#" /></div>
     </div>
   )
 }
@@ -77,7 +84,7 @@ function SmallPageLink({ label, description, href }: { label: string, descriptio
       <div className="flex flex-col justify-start">
         <div className="flex flex-col justify-between">
           <p className="text-lg font-semibold">{label}</p>
-          <p className="opacity-60 text-">{description}</p>
+          <p className="opacity-60 text-sm">{description}</p>
         </div>
       </div>
       <ChevronRight className="text-secondary" />

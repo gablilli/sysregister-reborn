@@ -17,7 +17,6 @@ export async function getUserSession({ uid, pass }: { uid: string, pass: string 
     const expiry = req.headers.get("expires");
     const token = setCookies?.find(cookie => cookie.startsWith("HttpOnly, PHPSESSID="))?.split("=")[1];
 
-
     if (!token || !expiry) {
         return "Credenziali non valide.";
     }

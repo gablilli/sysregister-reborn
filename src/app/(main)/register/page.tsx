@@ -27,14 +27,16 @@ function MarksPageLink() {
 
   useEffect(() => {
     async function getMarksData() {
-      setMarks(await getMarks());
+      const marksData = await getMarks();
+      setMarks(marksData || []);
     }
     getMarksData();
   }, []);
 
   useEffect(() => {
     async function getPeriodsData() {
-      setPeriods(await getPeriods());
+      const periodsData = await getPeriods();
+      setPeriods(periodsData || []);
     }
     getPeriodsData();
   }, []);

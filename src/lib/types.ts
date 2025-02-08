@@ -67,24 +67,23 @@ export type AttachmentType = {
 }
 
 export type BachecaType = {
-    pubId: number;
-    pubDT: string;
-    readStatus: boolean;
-    evtCode: string;
-    cntId: number;
-    cntValidFrom: string;
-    cntValidTo: string;
-    cntValidInRange: boolean;
-    cntStatus: string;
-    cntTitle: string;
-    cntCategory: string;
-    cntHasChanged: boolean;
-    cntHasAttach: boolean;
-    needJoin: boolean;
-    needReply: boolean;
-    needFile: boolean;
-    needSign: boolean;
-    evento_id: string;
-    dinsert_allegato: string;
-    attachments: AttachmentType[];
+    id: string;
+    codice: number;
+    titolo: string;
+    testo: string;
+    data_start: string;
+    data_stop: string;
+    tipo_com: string;
+    tipo_com_filtro: string;
+    tipo_com_desc: string;
+    nome_file: string | null;
+    richieste: string;
+    id_relazione: string;
+    conf_lettura: string;
+    flag_risp: string;
+    testo_risp: string | null;
+    file_risp: string | null;
+    flag_accettazione: string;
+    modificato: string;
+    evento_data: string;
 }

@@ -2,6 +2,7 @@
 import { cookies } from "next/headers";
 import { JSDOM } from "jsdom";
 import { GradeType, PeriodType, Subject } from "@/lib/types";
+import { handleAuthError } from "@/lib/api";
 
 export async function getPeriods() {
     const page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
@@ -10,19 +11,23 @@ export async function getPeriods() {
         },
     })).text();
     const dom = new JSDOM(page);
-    const periodsContainer = dom.window.document.querySelector("ul");
+    try {
+        const periodsContainer = dom.window.document.querySelector("ul");
 
-    const periods: PeriodType[] = [];
-    if (periodsContainer) {
-        Array.from(periodsContainer.children).map((period, i) => {
-            periods.push({
-                periodCode: (period.children[0] as HTMLAnchorElement)?.href.split("#")[1] || "",
-                periodPos: i + 1,
-                periodDesc: period.textContent || "",
+        const periods: PeriodType[] = [];
+        if (periodsContainer) {
+            Array.from(periodsContainer.children).map((period, i) => {
+                periods.push({
+                    periodCode: (period.children[0] as HTMLAnchorElement)?.href.split("#")[1] || "",
+                    periodPos: i + 1,
+                    periodDesc: period.textContent || "",
+                });
             });
-        });
+        }
+        return periods;
+    } catch {
+        handleAuthError();
     }
-    return periods;
 }
 
 const markTable: { [key: string]: number } = {
@@ -42,34 +47,41 @@ export async function getMarks() {
     })).text();
     const dom = new JSDOM(page);
 
-    const periods = await getPeriods();
-    const marks: GradeType[] = [];
-    periods.map(async (period) => {
-        const rawPeriodTable = dom.window.document.querySelector(`table[sessione=${period.periodCode}]`)?.querySelector("tbody");
-        const subjectIds = Array.from(rawPeriodTable?.children || [])
-            .filter((row) => row.children.length > 1 && row.classList.contains("riga_competenza_default"))
-            .map((row) => row.getAttribute("materia_id"));
-        const periodTable = Array.from(rawPeriodTable?.children || [])
-            .filter((row) => row.children.length > 1 && row.classList.contains("riga_materia_componente"));
-        periodTable.map((row, subjectIndex) => {
-            const subjectName = row.children[0].textContent?.trim().toUpperCase() || "";
-            const grades = Array.from(row.children).filter((cell) => cell.classList.contains("cella_voto"));
-            grades.map((grade) => {
-                marks.push({
-                    subjectId: Number(subjectIds[subjectIndex]) || 0,
-                    subjectDesc: subjectName.trim(),
-                    evtId: Number(grade.getAttribute("evento_id")) || 0,
-                    evtDate: grade.children[0].textContent?.trim() || "",
-                    decimalValue: markTable[grade.children[1].textContent?.trim() || "-"] || 0,
-                    displayValue: grade.children[1].textContent?.trim() || "-",
-                    color: grade.children[1].classList.contains("f_reg_voto_dettaglio") ? "blue" : "green",
-                    periodDesc: period.periodDesc,
-                    componentDesc: grade.children[1].getAttribute("title") || "",
+    try {
+        const periods = await getPeriods();
+        if (!periods) {
+            return [];
+        };
+        const marks: GradeType[] = [];
+        periods.map(async (period) => {
+            const rawPeriodTable = dom.window.document.querySelector(`table[sessione=${period.periodCode}]`)?.querySelector("tbody");
+            const subjectIds = Array.from(rawPeriodTable?.children || [])
+                .filter((row) => row.children.length > 1 && row.classList.contains("riga_competenza_default"))
+                .map((row) => row.getAttribute("materia_id"));
+            const periodTable = Array.from(rawPeriodTable?.children || [])
+                .filter((row) => row.children.length > 1 && row.classList.contains("riga_materia_componente"));
+            periodTable.map((row, subjectIndex) => {
+                const subjectName = row.children[0].textContent?.trim().toUpperCase() || "";
+                const grades = Array.from(row.children).filter((cell) => cell.classList.contains("cella_voto"));
+                grades.map((grade) => {
+                    marks.push({
+                        subjectId: Number(subjectIds[subjectIndex]) || 0,
+                        subjectDesc: subjectName.trim(),
+                        evtId: Number(grade.getAttribute("evento_id")) || 0,
+                        evtDate: grade.children[0].textContent?.trim() || "",
+                        decimalValue: markTable[grade.children[1].textContent?.trim() || "-"] || 0,
+                        displayValue: grade.children[1].textContent?.trim() || "-",
+                        color: grade.children[1].classList.contains("f_reg_voto_dettaglio") ? "blue" : "green",
+                        periodDesc: period.periodDesc,
+                        componentDesc: grade.children[1].getAttribute("title") || "",
+                    });
                 });
             });
         });
-    });
-    return marks;
+        return marks;
+    } catch {
+        handleAuthError();
+    }
 }
 
 export async function getSubject(subjectName: string) {
@@ -79,17 +91,21 @@ export async function getSubject(subjectName: string) {
         },
     })).text();
     const subjectIdDom = new JSDOM(subjectIdPage);
-    const subjectNameResult = subjectIdDom.window.document.querySelector(`div[title*='${decodeURIComponent(subjectName)}']`)?.textContent;
-    const subjectId = subjectIdDom.window.document.querySelector(`div[title*='${decodeURIComponent(subjectName)}']`)?.getAttribute("materia_id");
-    // id strani di classeviva
-    const autoriId = subjectIdDom.window.document.querySelector(`div[title*='${decodeURIComponent(subjectName)}']`)?.getAttribute("autori_id");
-    if (!subjectNameResult || !subjectId || !autoriId) {
-        return [];
+
+    try {
+        const subjectNameResult = subjectIdDom.window.document.querySelector(`div[title*='${decodeURIComponent(subjectName)}']`)?.textContent;
+        const subjectId = subjectIdDom.window.document.querySelector(`div[title*='${decodeURIComponent(subjectName)}']`)?.getAttribute("materia_id");
+        const autoriId = subjectIdDom.window.document.querySelector(`div[title*='${decodeURIComponent(subjectName)}']`)?.getAttribute("autori_id");
+        if (!subjectNameResult || !subjectId || !autoriId) {
+            return [];
+        }
+        const subject: Subject = {
+            id: Number(subjectId),
+            name: subjectNameResult,
+            teachers: [],
+        };
+        return subject;
+    } catch {
+        handleAuthError();
     }
-    const subject: Subject = {
-        id: Number(subjectId),
-        name: subjectNameResult,
-        teachers: [],
-    };
-    return subject;
 }
