@@ -17,7 +17,7 @@ export async function getBacheca() {
     try {
         data = await res.json();
     } catch {
-        handleAuthError();
+        return handleAuthError();
     }
     return data;
 }

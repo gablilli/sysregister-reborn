@@ -18,7 +18,7 @@ export async function getDayAgenda(date: Date) {
     try {
         data = (await res.json()).filter((item: AgendaItemType) => item.tipo === "nota");
     } catch {
-        handleAuthError();
+        return handleAuthError();
     }
     return data;
 }
@@ -34,7 +34,7 @@ export async function getDayLessons(date: Date) {
     try {
         data = (await res.json()).data;
     } catch {
-        handleAuthError();
+        return handleAuthError();
     }
     return data;
 }

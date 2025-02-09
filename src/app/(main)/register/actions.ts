@@ -31,7 +31,7 @@ export async function getPeriods(inputPage?: string) {
         }
         return periods;
     } catch {
-        handleAuthError();
+        return handleAuthError();
     }
 }
 
@@ -90,7 +90,7 @@ export async function getMarks(inputPage?: string) {
         });
         return marks;
     } catch {
-        handleAuthError();
+        return handleAuthError();
     }
 }
 
@@ -116,7 +116,7 @@ export async function getSubject(subjectName: string) {
         };
         return subject;
     } catch {
-        handleAuthError();
+        return handleAuthError();
     }
 }
 
