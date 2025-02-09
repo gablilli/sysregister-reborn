@@ -2,6 +2,8 @@
 import { handleAuthError } from "@/lib/api";
 import { AgendaItemType } from "@/lib/types";
 import { cookies } from "next/headers";
+import { getUserDetails, verifySession } from "../(auth)/auth/actions";
+import { db } from "@/lib/db";
 
 export async function getDayAgenda(date: Date) {
     const formData = new FormData();
@@ -37,4 +39,45 @@ export async function getDayLessons(date: Date) {
         return handleAuthError();
     }
     return data;
+}
+
+// SERVER-DATA-SECTION
+export async function updateServerData() {
+    if (!(await verifySession())) {
+        return handleAuthError();
+    }
+    const user = await db.user.findUnique({
+        where: { id: cookies().get("uid")?.value }
+    });
+
+    if (!user?.hasAcceptedSocialTerms) {
+        return;
+    };
+    if (!user.school) {
+        const school = await getUserDetails();
+        if (school) {
+            await db.user.update({
+                where: { id: user.id },
+                data: {
+                    school: school.schoolName
+                }
+            });
+        }
+    }
+    if (!user.average) {
+        await db.user.update({
+            where: { id: user.id },
+            data: {
+                average: 0
+            }
+        });
+    }
+    if (!user.name) {
+        return "username_not_set";
+    }
+
+    const lastUpdate = user?.lastServerDataUpdate ? new Date(user.lastServerDataUpdate) : null;
+    if (lastUpdate && (new Date().getTime() - lastUpdate.getTime()) < 6 * 60 * 60 * 1000) {
+        return "updated";
+    }
 }

@@ -9,6 +9,7 @@ import registerIconFilled from "@/assets/icons/registerFilled.svg";
 import profileIcon from "@/assets/icons/profile.svg";
 import profileIconFilled from "@/assets/icons/profileFilled.svg";
 import Image from "next/image";
+import { Star } from "lucide-react";
 
 export default function Navbar() {
   const path = usePathname();
@@ -18,11 +19,10 @@ export default function Navbar() {
         {/*today icon*/}
         <Link href={"/"}>
           <div
-            className={`h-[28px] w-[28px] transition-all flex items-center justify-center rounded-md ${
-              path == "/"
+            className={`h-[28px] w-[28px] transition-all flex items-center justify-center rounded-md ${path == "/"
                 ? "border-accent bg-accent text-black"
                 : "border-white bg-none text-white"
-            } border-2`}
+              } border-2`}
           >
             <p className="text-xs font-semibold">{new Date().getDate()}</p>
           </div>
@@ -33,6 +33,14 @@ export default function Navbar() {
             <Image src={fileIconFilled} alt="file" width={30} height={30} />
           ) : (
             <Image src={fileIcon} alt="file" width={30} height={30} />
+          )}
+        </Link>
+        {/*social icon */}
+        <Link href={"/social"}>
+          {path.startsWith("/social") ? (
+            <Star fill="var(--primary)" className="text-primary" size={32} />
+          ) : (
+            <Star size={32} />
           )}
         </Link>
         {/*register icon */}

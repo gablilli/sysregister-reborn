@@ -1,4 +1,7 @@
 "use server";
+import { handleAuthError } from "@/lib/api";
+import { db } from "@/lib/db";
+import { JSDOM } from "jsdom";
 import { cookies } from "next/headers";
 export async function getUserSession({ uid, pass }: { uid: string, pass: string }) {
     if (!uid || !pass) {
@@ -21,7 +24,50 @@ export async function getUserSession({ uid, pass }: { uid: string, pass: string 
         return "Credenziali non valide.";
     }
 
+    await db.user.upsert({
+        where: { id: uid },
+        create: { id: uid },
+        update: { id: uid }
+    });
+
     cookies().set("tokenExpiry", new Date(expiry).toISOString());
     cookies().set("token", token);
     cookies().set("uid", uid);
+
+    getUserDetails();
+}
+
+export async function getUserDetails() {
+    const page = await (await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
+        headers: {
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+        },
+    })).text();
+    const dom = new JSDOM(page);
+    try {
+        const schoolName = dom.window.document.querySelector("span.scuola")?.textContent;
+        return {
+            schoolName
+        };
+    } catch {
+        return handleAuthError();
+    }
+}
+
+export async function verifySession() {
+    const page = await (await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
+        headers: {
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+        },
+    })).text();
+    const dom = new JSDOM(page);
+    try {
+        if (dom.window.document.querySelector("span.scuola")) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch {
+        return false;
+    }
 }
