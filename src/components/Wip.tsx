@@ -2,7 +2,7 @@ import { Cog } from "lucide-react";
 
 export default function Wip() {
   return (
-    <div className="h-[calc(100svh-90px-104px)] px-4 flex flex-col items-center justify-center">
+    <div className="h-[calc(100svh-90px-104px)] flex flex-col items-center justify-center">
       <div className="flex ites-center">
         <Cog className="text-primary mb-4 animate-spin" size={100} />
         <Cog className="text-secondary mb-4 animate-spin delay-750" size={50} />

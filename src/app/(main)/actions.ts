@@ -1,9 +1,10 @@
 "use server";
 import { handleAuthError } from "@/lib/api";
-import { AgendaItemType } from "@/lib/types";
+import { AgendaItemType, GradeType } from "@/lib/types";
 import { cookies } from "next/headers";
 import { getUserDetails, verifySession } from "../(auth)/auth/actions";
 import { db } from "@/lib/db";
+import { getMarks } from "./register/actions";
 
 export async function getDayAgenda(date: Date) {
     const formData = new FormData();
@@ -64,25 +65,48 @@ export async function updateServerData() {
             });
         }
     }
-    if (!user.average) {
-        await db.user.update({
-            where: { id: user.id },
-            data: {
-                average: 0
-            }
-        });
-    }
+    // if (!user.average || user.average === 0) {
+    //     const marks: GradeType[] = await getMarks() as GradeType[];
+    //     const totalAverage =
+    //         marks
+    //             .filter((mark) => mark.color !== "blue")
+    //             .reduce((acc, mark) => acc + mark.decimalValue, 0) /
+    //         marks.filter((mark) => mark.color !== "blue").length;
+    //     await db.user.update({
+    //         where: { id: user.id },
+    //         data: {
+    //             average: totalAverage
+    //         }
+    //     });
+    // }
     if (!user.name) {
         return "username_not_set";
     }
 
     const lastUpdate = user?.lastServerDataUpdate ? new Date(user.lastServerDataUpdate) : null;
-    if (lastUpdate && (new Date().getTime() - lastUpdate.getTime()) < 6 * 60 * 60 * 1000) {
+    if (lastUpdate && (new Date().getTime() - lastUpdate.getTime()) < 8 * 60 * 60 * 1000) {
         return "updated";
     }
+
+    const marks: GradeType[] = await getMarks() as GradeType[];
+    const totalAverage =
+        marks
+            .filter((mark) => mark.color !== "blue")
+            .reduce((acc, mark) => acc + mark.decimalValue, 0) /
+        marks.filter((mark) => mark.color !== "blue").length;
+    await db.user.update({
+        where: { id: user.id },
+        data: {
+            average: totalAverage,
+            lastServerDataUpdate: new Date()
+        }
+    });
 }
 
 export async function setUserName(username: string) {
+    if (username.length > 13) {
+        return "Username troppo lungo, massimo 13 caratteri.";
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }
