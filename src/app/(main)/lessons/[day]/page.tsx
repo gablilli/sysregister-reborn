@@ -27,7 +27,9 @@ const Page = ({ params }: { params: { day: string }; }) => {
         parseInt(day.substring(0, 4)),
         parseInt(day.substring(4, 6)) - 1,
         parseInt(day.substring(6, 8)),
-        8, 0, 0
+        new Date().getHours(),
+        new Date().getMinutes(),
+        new Date().getSeconds()
       );
       setLessonsData((await getDayLessons(date)));
     }

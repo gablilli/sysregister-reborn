@@ -81,3 +81,22 @@ export async function updateServerData() {
         return "updated";
     }
 }
+
+export async function setUserName(username: string) {
+    if (!(await verifySession())) {
+        return handleAuthError();
+    }
+    try {
+        await db.user.update({
+            where: { id: cookies().get("uid")?.value },
+            data: {
+                name: username
+            }
+        });
+    } catch (error) {
+        if ((error as { code: string }).code === 'P2002') {
+            return "Questo username è già stato preso.";
+        }
+        throw error;
+    }
+}

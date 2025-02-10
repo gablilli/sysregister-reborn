@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-react";
+import { Loader, } from "lucide-react";
 import React from "react";
 
 const Button = ({
@@ -18,7 +18,7 @@ const Button = ({
         >
             {loading ? (
                 <div className="flex items-center justify-center w-full">
-                    <LoaderCircle className="animate-spin" size={20} />
+                    <Loader className="animate-spin" size={20} />
                 </div>
             ) : (
                 children

@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no">
       <body
         className={`${inter.className} overflow-x-hidden antialiased dark bg-background text-text`}
       >

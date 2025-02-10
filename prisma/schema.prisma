@@ -14,7 +14,7 @@ model User {
   id                     String   @id
   lastServerDataUpdate   DateTime @default(now())
   hasAcceptedSocialTerms Boolean  @default(false)
-  name                   String?
+  name                   String?  @unique
   school                 String?
   average                Float?
 }
