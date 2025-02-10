@@ -26,9 +26,10 @@ const Page = ({ params }: { params: { day: string }; }) => {
       const date = new Date(
         parseInt(day.substring(0, 4)),
         parseInt(day.substring(4, 6)) - 1,
-        parseInt(day.substring(6, 8))
+        parseInt(day.substring(6, 8)),
+        8, 0, 0
       );
-      setLessonsData((await getDayLessons(date)).reverse());
+      setLessonsData((await getDayLessons(date)));
     }
     getLessonData();
   }, [day]);

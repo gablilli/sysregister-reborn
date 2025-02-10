@@ -112,12 +112,12 @@ function BachecaEntry({ bachecaItem, setBacheca, bacheca }: { bachecaItem: Bache
                     setBacheca({
                         ...bacheca,
                         msg_new: bacheca.msg_new.filter((item) => item.id_relazione !== bachecaItem.id_relazione),
-                        read: Array.isArray(bacheca.read) ? [...bacheca.read, bachecaItem] : [bachecaItem]
+                        read: Array.isArray(bacheca.read) ? [bachecaItem, ...bacheca.read] : [bachecaItem]
                     })
                     window.sessionStorage.setItem('bacheca', JSON.stringify({
                         ...bacheca,
                         msg_new: bacheca.msg_new.filter((item) => item.id_relazione !== bachecaItem.id_relazione),
-                        read: Array.isArray(bacheca.read) ? [...bacheca.read, bachecaItem] : [bachecaItem]
+                        read: Array.isArray(bacheca.read) ? [bachecaItem, ...bacheca.read] : [bachecaItem]
                     }));
                     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                 }} className="mt-12 w-full">Chiudi e segna come letto</Button>
