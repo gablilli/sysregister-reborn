@@ -19,6 +19,7 @@ export async function hasUserAcceptedSocialTerms() {
     }
 }
 
+// this seems unsafe... need better way to handle user id
 export async function acceptSocialTerms() {
     if (!(await verifySession())) {
         return handleAuthError();
@@ -28,6 +29,22 @@ export async function acceptSocialTerms() {
             where: { id: cookies().get("uid")?.value },
             data: {
                 hasAcceptedSocialTerms: true
+            }
+        });
+    } catch {
+        return "Internal Server Error.";
+    }
+}
+
+export async function revokeSocialTerms() {
+    if (!(await verifySession())) {
+        return handleAuthError();
+    }
+    try {
+        await db.user.update({
+            where: { id: cookies().get("uid")?.value },
+            data: {
+                hasAcceptedSocialTerms: false
             }
         });
     } catch {

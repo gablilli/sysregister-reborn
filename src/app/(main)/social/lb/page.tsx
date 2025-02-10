@@ -20,7 +20,7 @@ export default function Page() {
         getLeaderboardData();
     }, [])
     return (
-        <div className="p-4">
+        <div className="p-4 max-w-3xl mx-auto">
             <Tabs className="w-full" defaultValue="media">
                 <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
                     <p className="text-3xl mb-2 font-semibold">Classifiche</p>
@@ -64,7 +64,7 @@ function LeaderboardEntry({rank, name, value}: {rank?: number, name?: string, va
                 </div>
             </div>
             <div className="font-semibold">
-                {value === 0 ? '-' : value}
+                {value === 0 ? '-' : value?.toFixed(3)}
             </div>
         </div>
     )

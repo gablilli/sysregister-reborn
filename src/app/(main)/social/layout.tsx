@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { acceptSocialTerms, hasUserAcceptedSocialTerms } from "./actions";
+import { acceptSocialTerms, hasUserAcceptedSocialTerms, revokeSocialTerms } from "./actions";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -18,12 +18,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 function SocialTermsDrawer() {
     const router = useRouter();
     const [hasUserAcceptedTerms, setHasUserAcceptedTerms] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(true);
     useEffect(() => {
         async function getUserDecision() {
+            setLoading(true);
             setHasUserAcceptedTerms(await hasUserAcceptedSocialTerms() as boolean);
+            setLoading(false);
         }
         getUserDecision();
     }, []);
+    if (loading) {
+        return null;
+    }
+    if (hasUserAcceptedTerms) {
+        return (
+            <div className="bg-yellow-500 text-background">
+                <div className="max-w-3xl mx-auto p-4">
+                    <div>
+                        <p className="font-semibold ">Stai partecipando alla classifica generale</p>
+                        <p className="text-sm">Mentre partecipi la tua media, numero di ritardi, assenze e numero di note sono visibili a tutti.</p>
+                    </div>
+                    <Button onClick={async () => {
+                        await revokeSocialTerms();
+                        router.push("/");
+                    }} variant={"default"} className="bg-red-700 font-semibold mt-4 hover:bg-red-600 text-white">Revoca autorizzazione dati</Button>
+                </div>
+            </div>
+        )
+    }
     return (
         <Drawer open={!hasUserAcceptedTerms}>
             <DrawerContent>

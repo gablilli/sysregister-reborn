@@ -65,20 +65,20 @@ export async function updateServerData() {
             });
         }
     }
-    // if (!user.average || user.average === 0) {
-    //     const marks: GradeType[] = await getMarks() as GradeType[];
-    //     const totalAverage =
-    //         marks
-    //             .filter((mark) => mark.color !== "blue")
-    //             .reduce((acc, mark) => acc + mark.decimalValue, 0) /
-    //         marks.filter((mark) => mark.color !== "blue").length;
-    //     await db.user.update({
-    //         where: { id: user.id },
-    //         data: {
-    //             average: totalAverage
-    //         }
-    //     });
-    // }
+    if (!user.average || user.average === 0) {
+        const marks: GradeType[] = await getMarks() as GradeType[];
+        const totalAverage =
+            marks
+                .filter((mark) => mark.color !== "blue")
+                .reduce((acc, mark) => acc + mark.decimalValue, 0) /
+            marks.filter((mark) => mark.color !== "blue").length;
+        await db.user.update({
+            where: { id: user.id },
+            data: {
+                average: totalAverage
+            }
+        });
+    }
     if (!user.name) {
         return "username_not_set";
     }

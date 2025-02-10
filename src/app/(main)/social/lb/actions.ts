@@ -11,7 +11,7 @@ export async function getLeaderboard() {
             average: true,
             hasAcceptedSocialTerms: true
         }
-    }).then(users => users.filter(user => user.average !== null && user.hasAcceptedSocialTerms));
+    }).then(users => users.filter(user => user.average !== null && user.hasAcceptedSocialTerms && user.name !== null));
     return leaderboard.map(user => ({
         name: user.name,
         average: user.average
