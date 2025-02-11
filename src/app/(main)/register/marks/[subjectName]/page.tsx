@@ -14,7 +14,8 @@ import {
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { getMarks } from "../../actions";
+import { getMarkNotes, getMarks } from "../../actions";
+import { ChevronDown, Loader } from "lucide-react";
 
 
 export default function Page() {
@@ -181,41 +182,73 @@ function MarksDetails({ marks }: { marks: GradeType[] }) {
                 </TabsList>
             </div>
             {periods.map((period, index) => (
-                <TabsContent ref={parent} value={period} key={JSON.stringify(period)} className="p-4 overflow-hidden rounded-xl">
+                <TabsContent ref={parent} value={period} key={JSON.stringify(period)} className="p-4 relative overflow-hidden rounded-xl">
                     <div className="bg-secondary -z-10 opacity-15 absolute top-0 bottom-0 left-0 right-0" />
-                    <div key={index} className="flex flex-col gap-7">
+                    <div key={index} ref={parent} className="flex flex-col gap-7">
                         {marksByPeriod[index].map(mark => (
-                            <div key={mark.evtId}>
-                                <div className="flex items-center gap-2">
-                                    <div>
-                                        <span
-                                            className={` ${mark.color === "blue"
-                                                ? "bg-blue-900"
-                                                : mark.decimalValue <= 5.5
-                                                    ? "bg-red-600"
-                                                    : mark.decimalValue <= 6.0
-                                                        ? "bg-yellow-600"
-                                                        : "bg-green-600"
-                                                } w-14 h-14 text-xl flex rounded-full font-semibold justify-center items-center text-white`}
-                                        >
-                                            {mark.displayValue}
-                                        </span>
-                                    </div>
-                                    <div className="">
-                                        <p className="font-semibold">{mark.componentDesc ? mark.componentDesc : "Voto di prova"}</p>
-                                        <p className="opacity-60 text-sm">{mark.evtDate}</p>
-                                    </div>
-                                </div>
-                                {/* {mark.notesForFamily && (
-                                    <div className="flex items-center mt-2 relative p-4 rounded-lg overflow-hidden">
-                                        <div className="bg-secondary -z-10 opacity-30 absolute top-0 bottom-0 left-0 right-0" />
-                                        <span className="whitespace-pre-wrap">{mark.notesForFamily}</span>
-                                    </div>
-                                )} */}
-                            </div>
+                            <SubjectMarkEntry mark={mark} key={mark.evtId} />
                         ))}
                     </div>
                 </TabsContent>))}
         </Tabs>
+    )
+}
+
+function SubjectMarkEntry({ mark }: { mark: GradeType }) {
+    const [parent] = useAutoAnimate();
+    const [notes, setNotes] = useState<string | boolean | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    return (
+        <div ref={parent} key={mark.evtId} onClick={async () => {
+            if (notes == null) {
+                setLoading(true);
+                const storedNotes = window.sessionStorage.getItem(`mark_note_${mark.evtId}`);
+                if (storedNotes) {
+                    setNotes(storedNotes);
+                } else {
+                    const notes = await getMarkNotes(mark.evtId);
+                    if (!notes) {
+                        setNotes(false);
+                    } else {
+                        setNotes(notes || "");
+                        window.sessionStorage.setItem(`mark_note_${mark.evtId}`, notes);
+                    }
+                }
+                setLoading(false);
+            } else {
+                setNotes(null);
+            }
+        }}>
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <div>
+                        <span
+                            className={` ${mark.color === "blue"
+                                ? "bg-blue-900"
+                                : mark.decimalValue <= 5.5
+                                    ? "bg-red-600"
+                                    : mark.decimalValue < 6.0
+                                        ? "bg-yellow-600"
+                                        : "bg-green-600"
+                                } w-14 h-14 text-xl flex rounded-full font-semibold justify-center items-center text-white`}
+                        >
+                            {loading ? <Loader className="animate-spin" /> : mark.displayValue}
+                        </span>
+                    </div>
+                    <div className="">
+                        <p className="font-semibold">{mark.componentDesc ? mark.componentDesc : "Voto di prova"}</p>
+                        <p className="opacity-60 text-sm">{mark.evtDate}</p>
+                    </div>
+                </div>
+                <ChevronDown className={`transition-all text-accent duration-500 transform ${notes !== null ? "rotate-180" : ""}`} />
+            </div>
+            {notes != null && (
+                <div className="flex items-center mt-3 relative p-4 rounded-lg overflow-hidden">
+                    <div className="bg-secondary -z-10 opacity-30 absolute top-0 bottom-0 left-0 right-0" />
+                    <span className="whitespace-pre-wrap">{notes}</span>
+                    {!notes && <span className="italic font-semibold">Il docente non ha inserito note per la famiglia.</span>}
+                </div>
+            )}
+        </div>
     )
 }

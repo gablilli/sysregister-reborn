@@ -94,6 +94,23 @@ export async function getMarks(inputPage?: string) {
     }
 }
 
+export async function getMarkNotes(evtId: number) {
+    const page = await (await fetch(`https://web.spaggiari.eu/cvv/app/default/genitori_voti.php?ope=voto_detail&evento_id=${evtId}`, {
+        headers: {
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+        },
+    })).text();
+    const dom = new JSDOM(page);
+
+    try {
+        const notesContainer = dom.window.document.querySelector("td[colspan='5']");
+        const notes = notesContainer?.textContent?.trim() || "";
+        return notes;
+    } catch {
+        return handleAuthError();
+    }
+}
+
 export async function getSubject(subjectName: string) {
     const subjectIdPage = await (await fetch(`https://web.spaggiari.eu/fml/app/default/regclasse_lezioni_xstudenti.php`, {
         headers: {

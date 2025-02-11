@@ -7,10 +7,10 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, D
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <>
+        <div>
             <SocialTermsDrawer />
             {children}
-        </>
+        </div>
     )
 }
 
@@ -22,11 +22,18 @@ function SocialTermsDrawer() {
     useEffect(() => {
         async function getUserDecision() {
             setLoading(true);
+            const userDecision = window.localStorage.getItem("social_terms_accepted");
+            if (userDecision === "true") {
+                setHasUserAcceptedTerms(true);
+                setLoading(false);
+                return;
+            };
             setHasUserAcceptedTerms(await hasUserAcceptedSocialTerms() as boolean);
+            window.localStorage.setItem("social_terms_accepted", hasUserAcceptedTerms.toString());
             setLoading(false);
         }
         getUserDecision();
-    }, []);
+    }, [hasUserAcceptedTerms]);
     if (loading) {
         return null;
     }

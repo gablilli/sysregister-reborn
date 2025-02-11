@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { getBacheca, setReadBachecaItem } from "../actions";
 import { BachecaType } from "@/lib/types";
 import { Input } from "@/components/Input";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
@@ -41,6 +41,14 @@ export default function Page() {
             <div className="max-w-3xl relative p-4 pb-0 mt-4 mx-auto">
                 <Search className="absolute top-6 left-6 z-10 text-secondary opacity-50" />
                 <Input onChange={(e) => setSearch(e.target.value)} value={search} className="focus:outline-none text-base font-normal !py-2 pl-10" placeholder="Cerca nella bacheca" />
+                {search && search.length > 0 && (
+                    <div onClick={() => {
+                        setSearch('');
+                    }} className="w-5  -translate-x-1/2 absolute flex items-center justify-center h-full top-0 right-4">
+                        <div className="w-5 h-5 mt-4 flex items-center justify-center rounded-full bg-secondary ">
+                            <X size={12} className="text-background" />
+                        </div>
+                    </div>)}
             </div>
             <div ref={parent} className="max-w-3xl p-4 pt-0 mx-auto text-3xl font-semibold mt-4 flex flex-col gap-6">
 

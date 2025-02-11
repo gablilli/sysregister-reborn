@@ -14,7 +14,7 @@ export default function Line({
           className={`asbolute block text-right top-0 bottom-0 left-0 ${
             value <= 5.5
               ? "bg-red-600"
-              : value <= 6.0
+              : value < 6.0
               ? "bg-yellow-600"
               : "bg-green-600"
           }`}

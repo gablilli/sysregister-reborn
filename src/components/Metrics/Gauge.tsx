@@ -25,7 +25,7 @@ export default function Gauge({
             ? "border-gray-600"
             : value <= 5.5
             ? "border-red-600"
-            : value <= 6.0
+            : value < 6.0
             ? "border-yellow-600"
             : "border-green-600"
         }`}

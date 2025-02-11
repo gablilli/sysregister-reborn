@@ -11,8 +11,8 @@ import { getGradesAverage } from "@/lib/utils";
 import Gauge from "@/components/Metrics/Gauge";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { getMarks, getPeriods } from "../actions";
+import { ChevronRight, Loader } from "lucide-react";
+import { getMarkNotes, getMarks, getPeriods } from "../actions";
 
 export default function Page() {
   const [periods, setPeriods] = useState<PeriodType[]>([]);
@@ -51,6 +51,10 @@ export default function Page() {
         sortedMarks.push(periodMarks);
       }
       setMarks(sortedMarks);
+      window.addEventListener('unload', function () {
+        const readMarksIds = marks.flat().map(mark => mark.evtId);
+        window.localStorage.setItem("read_marks_ids", JSON.stringify(readMarksIds));
+      })
     }
     fetchPeriodsMarks();
   }, [periods]);
@@ -88,15 +92,65 @@ export default function Page() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       {periods.length !== 0 ? (
-        <Tabs defaultValue={periods[1].periodDesc} >
+        <Tabs defaultValue={"all"} >
           <div className="sticky top-0 z-10 shadow-xl pt-4 pb-4 bg-background">
             <p className="text-3xl mb-2 font-semibold">Valutazioni</p>
-            <TabsList className="grid  w-full grid-cols-2">
+            <TabsList className={`grid  w-full grid-cols-3`}>
+              <TabsTrigger value={"all"}>Valutazioni</TabsTrigger>
               {periods.map((period, index) => (
                 <TabsTrigger key={index} value={period.periodDesc}>{period.periodDesc}</TabsTrigger>
               ))}
             </TabsList>
           </div>
+          <TabsContent ref={parent} value="all">
+            <div className="flex flex-col gap-8">
+              {marks.flat().filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length !== 0 && (
+                <div>
+                  <p className="font-semibold text-2xl mb-1.5">
+                    Nuovi voti ({marks.flat().filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length})
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {marks.reverse().map((periodMarks) => (
+                      periodMarks
+                        .sort((a, b) => {
+                          const [dayA, monthA] = a.evtDate.split('/').map(Number);
+                          const [dayB, monthB] = b.evtDate.split('/').map(Number);
+                          return monthA === monthB ? dayA - dayB : monthA - monthB;
+                        })
+                        .reverse()
+                        .filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId))
+                        .map(mark => (
+                          <>
+                            <MarkEntry key={mark.evtId} mark={mark} />
+                            {(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)}
+                          </>
+                        ))
+                    ))}
+                  </div>
+                </div>
+              )}
+              {marks.flat().filter(mark => (JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length > 0 && (
+                <div>
+                  {marks.flat().filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length !== 0 && (<p className="font-semibold text-2xl mb-1.5">Giá visti</p>)}
+                  <div className="flex flex-col gap-3">
+                    {marks.reverse().map((periodMarks) => (
+                      periodMarks
+                        .sort((a, b) => {
+                          const [dayA, monthA] = a.evtDate.split('/').map(Number);
+                          const [dayB, monthB] = b.evtDate.split('/').map(Number);
+                          return monthA === monthB ? dayA - dayB : monthA - monthB;
+                        })
+                        .reverse()
+                        .filter(mark => (JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId))
+                        .map(mark => (
+                          <MarkEntry key={mark.evtId} mark={mark} />
+                        ))
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
           {subjects.length !== 0 && periods.map((period, index) => (
             <TabsContent ref={parent} key={index} value={period.periodDesc} className="flex flex-col gap-2 mt-0">
               <div className="relative flex flex-col gap-2 items-center justify-center overflow-hidden p-4 pb-6 rounded-xl mb-4">
@@ -172,5 +226,63 @@ function SubjectCard({ subject }: { subject: Subject }) {
 function PeriodsTabsSkeleton() {
   return (
     <div className="inline-flex h-9 items-center relative !bg-red-950 overflow-hidden justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full animate-pulse" />
+  )
+}
+
+function MarkEntry({ mark }: { mark: GradeType }) {
+  const [parent] = useAutoAnimate();
+  const [notes, setNotes] = useState<string | boolean | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  return (
+    <div ref={parent} key={mark.evtId} className="relative p-3 px-3 rounded-xl overflow-hidden" onClick={async () => {
+      if (notes == null) {
+        setLoading(true);
+        const storedNotes = window.sessionStorage.getItem(`mark_note_${mark.evtId}`);
+        if (storedNotes) {
+          setNotes(storedNotes);
+        } else {
+          const notes = await getMarkNotes(mark.evtId);
+          if (!notes) {
+            setNotes(false);
+          } else {
+            setNotes(notes || "");
+            window.sessionStorage.setItem(`mark_note_${mark.evtId}`, notes);
+          }
+        }
+        setLoading(false);
+      } else {
+        setNotes(null);
+      }
+    }}>
+      <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
+      <div className="flex items-center gap-4">
+        <div>
+          <span
+            className={` ${mark.color === "blue"
+              ? "bg-blue-900"
+              : mark.decimalValue <= 5.5
+                ? "bg-red-600"
+                : mark.decimalValue < 6.0
+                  ? "bg-yellow-600"
+                  : "bg-green-600"
+              } w-14 h-14 text-xl flex rounded-full font-semibold justify-center items-center text-white`}
+          >
+            {loading ? <Loader className="animate-spin" /> : mark.displayValue}
+          </span>
+        </div>
+        <div className="">
+          <p className="text-sm">{mark.periodDesc}</p>
+          <p className="font-semibold">{mark.subjectDesc}</p>
+          <p className="opacity-60 text-sm">{mark.componentDesc ? mark.componentDesc : "Voto di prova"} • {mark.evtDate}</p>
+        </div>
+      </div>
+      {notes != null && (
+        <div className="flex items-center mt-3 relative p-4 rounded-lg overflow-hidden">
+          <div className="bg-secondary -z-10 opacity-30 absolute top-0 bottom-0 left-0 right-0" />
+          <span className="whitespace-pre-wrap">{notes}</span>
+          {!notes && <span className="italic font-semibold">Il docente non ha inserito note per la famiglia.</span>}
+        </div>
+      )}
+    </div>
   )
 }
