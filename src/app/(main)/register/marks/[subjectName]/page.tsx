@@ -175,7 +175,7 @@ function MarksDetails({ marks }: { marks: GradeType[] }) {
         <Tabs defaultValue={periods[0]} className="min-h-[80svh]" >
             <div className="sticky top-0 z-10 shadow-xl pt-4 pb-2 bg-background">
                 <p className="text-xl mb-1 font-semibold">Valutazioni</p>
-                <TabsList className={`grid w-full grid-cols-${periods.length}`}>
+                <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${periods.length}, minmax(0, 1fr))` }}>
                     {periods.map((period, index) => (
                         <TabsTrigger key={index} value={period}>{period}</TabsTrigger>
                     ))}

@@ -95,7 +95,7 @@ export default function Page() {
         <Tabs defaultValue={"all"} >
           <div className="sticky top-0 z-10 shadow-xl pt-4 pb-4 bg-background">
             <p className="text-3xl mb-2 font-semibold">Valutazioni</p>
-            <TabsList className={`grid  w-full grid-cols-3`}>
+            <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${periods.length + 1}, 1fr)` }}>
               <TabsTrigger value={"all"}>Valutazioni</TabsTrigger>
               {periods.map((period, index) => (
                 <TabsTrigger key={index} value={period.periodDesc}>{period.periodDesc}</TabsTrigger>
