@@ -29,11 +29,14 @@ function SocialTermsDrawer() {
                 return;
             };
             setHasUserAcceptedTerms(await hasUserAcceptedSocialTerms() as boolean);
-            window.localStorage.setItem("social_terms_accepted", hasUserAcceptedTerms.toString());
+            const userAccepted = await hasUserAcceptedSocialTerms();
+            if (typeof userAccepted === "boolean") {
+                window.localStorage.setItem("social_terms_accepted", userAccepted.toString());
+            }
             setLoading(false);
         }
         getUserDecision();
-    }, [hasUserAcceptedTerms]);
+    }, []);
     if (loading) {
         return null;
     }
@@ -47,6 +50,7 @@ function SocialTermsDrawer() {
                     </div>
                     <Button onClick={async () => {
                         await revokeSocialTerms();
+                        window.localStorage.setItem("social_terms_accepted", "false");
                         router.push("/");
                     }} variant={"default"} className="bg-red-700 font-semibold mt-4 hover:bg-red-600 text-white">Revoca autorizzazione dati</Button>
                 </div>
