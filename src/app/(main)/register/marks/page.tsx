@@ -110,7 +110,7 @@ export default function Page() {
                     Nuovi voti ({marks.flat().filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length})
                   </p>
                   <div className="flex flex-col gap-3">
-                    {marks.reverse().map((periodMarks) => (
+                    {marks.map((periodMarks) => (
                       periodMarks
                         .sort((a, b) => {
                           const [dayA, monthA] = a.evtDate.split('/').map(Number);
@@ -153,11 +153,11 @@ export default function Page() {
           </TabsContent>
           {subjects.length !== 0 && periods.map((period, index) => (
             <TabsContent ref={parent} key={index} value={period.periodDesc} className="flex flex-col gap-2 mt-0">
-              <div className="relative flex flex-col gap-2 items-center justify-center overflow-hidden p-4 pb-6 rounded-xl mb-4">
+                <div className="relative flex flex-col gap-2 items-center justify-center overflow-hidden p-4 pb-6 rounded-xl mb-4">
                 <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
                 <p className="text-lg font-semibold">Media del {periods[index].periodDesc}</p>
-                <Gauge value={parseFloat(getGradesAverage(marks[index]).toFixed(3))} size={120} />
-              </div>
+                <Gauge value={parseFloat(getGradesAverage(marks.slice().reverse()[index]).toFixed(3))} size={120} />
+                </div>
               {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 5.5).length !== 0 && (
                 <div>
                   <p className="font-semibold text-2xl mb-1.5">Da recuperare ({subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 5.5).length})</p>
