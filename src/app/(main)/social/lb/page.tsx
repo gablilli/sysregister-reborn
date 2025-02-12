@@ -40,11 +40,6 @@ export default function Page() {
                         </TabsList>
                     </div>
                     <TabsContent value="media" className="gap-2 flex flex-col">
-                        {leaderboard?.filter(entry => entry.isRequestingUser) && leaderboard?.indexOf(leaderboard?.filter(entry => entry.isRequestingUser)[0]) > 0 && (
-                            <div className="my-4 fixed bottom-[76px] right-[10px] max-w-3xl mx-auto left-[10px] shadow-xl">
-                                <LeaderboardEntry isRequestingUser rank={leaderboard?.filter(entry => entry.isRequestingUser) && leaderboard?.indexOf(leaderboard?.filter(entry => entry.isRequestingUser)[0]) + 1 || 0} name={leaderboard?.filter(entry => entry.isRequestingUser)[0].name as string} value={leaderboard?.filter(entry => entry.isRequestingUser)[0].average as number} />
-                            </div>
-                        )}
                         {leaderboard?.map((entry, index) => (
                             <LeaderboardEntry key={index} rank={index + 1} name={entry.name} value={entry.average} isRequestingUser={entry.isRequestingUser} />
                         ))}
