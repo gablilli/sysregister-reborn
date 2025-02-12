@@ -4,10 +4,14 @@ import { getLeaderboard } from "./actions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import Wip from "@/components/Wip";
+import { useRouter } from "next/navigation";
+import { hasUserAcceptedSocialTerms, revokeSocialTerms } from "../actions";
+import { Button } from "@/components/ui/button";
 
 type LeaderboardEntryType = {
     name: string;
     average: number;
+    isRequestingUser: boolean;
 }
 
 export default function Page() {
@@ -20,39 +24,49 @@ export default function Page() {
         getLeaderboardData();
     }, [])
     return (
-        <div className="p-4 max-w-3xl mx-auto">
-            <Tabs className="w-full" defaultValue="media">
-                <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
-                    <p className="text-3xl mb-2 font-semibold">Classifiche</p>
-                    <TabsList className="grid mb-2 w-full grid-cols-4">
-                        <TabsTrigger value="media">Media</TabsTrigger>
-                        <TabsTrigger value="delays">Ritardi</TabsTrigger>
-                        <TabsTrigger value="absences">Assenze</TabsTrigger>
-                        <TabsTrigger value="note">Note</TabsTrigger>
-                    </TabsList>
-                </div>
-                <TabsContent value="media" className="gap-2 flex flex-col">
-                    {leaderboard?.map((entry, index) => (
-                        <LeaderboardEntry key={index} rank={index + 1} name={entry.name} value={entry.average} />
-                    ))}
-                </TabsContent>
-                <TabsContent value="delays">
-                    <Wip />
-                </TabsContent>
-                <TabsContent value="absences">
-                    <Wip />
-                </TabsContent>
-                <TabsContent value="note">
-                    <Wip />
-                </TabsContent>
-            </Tabs>
+        <div>
+            <SocialTermsDrawer />
+
+
+            <div className="p-4 max-w-3xl mx-auto">
+                <Tabs className="w-full" defaultValue="media">
+                    <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
+                        <p className="text-3xl mb-2 font-semibold">Classifiche</p>
+                        <TabsList className="grid mb-2 w-full grid-cols-4">
+                            <TabsTrigger value="media">Media</TabsTrigger>
+                            <TabsTrigger value="delays">Ritardi</TabsTrigger>
+                            <TabsTrigger value="absences">Assenze</TabsTrigger>
+                            <TabsTrigger value="note">Note</TabsTrigger>
+                        </TabsList>
+                    </div>
+                    <TabsContent value="media" className="gap-2 flex flex-col">
+                        {leaderboard?.filter(entry => entry.isRequestingUser) && leaderboard?.indexOf(leaderboard?.filter(entry => entry.isRequestingUser)[0]) > 0 && (
+                            <div className="my-4 fixed bottom-[76px] right-[10px] max-w-3xl mx-auto left-[10px] shadow-xl">
+                                <LeaderboardEntry isRequestingUser rank={leaderboard?.filter(entry => entry.isRequestingUser) && leaderboard?.indexOf(leaderboard?.filter(entry => entry.isRequestingUser)[0]) + 1 || 0} name={leaderboard?.filter(entry => entry.isRequestingUser)[0].name as string} value={leaderboard?.filter(entry => entry.isRequestingUser)[0].average as number} />
+                            </div>
+                        )}
+                        {leaderboard?.map((entry, index) => (
+                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} value={entry.average} isRequestingUser={entry.isRequestingUser} />
+                        ))}
+                    </TabsContent>
+                    <TabsContent value="delays">
+                        <Wip />
+                    </TabsContent>
+                    <TabsContent value="absences">
+                        <Wip />
+                    </TabsContent>
+                    <TabsContent value="note">
+                        <Wip />
+                    </TabsContent>
+                </Tabs>
+            </div>
         </div>
     )
 }
 
-function LeaderboardEntry({rank, name, value}: {rank?: number, name?: string, value?: number}) {
+function LeaderboardEntry({ rank, name, value, isRequestingUser }: { rank: number, name: string, value: number, isRequestingUser?: boolean }) {
     return (
-        <div className="flex min-h-[50px] items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between">
+        <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
             <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
             <div className="flex items-center gap-4">
                 <div className="min-w-[40px] text-lg text-accent text-center font-semibold">
@@ -60,7 +74,7 @@ function LeaderboardEntry({rank, name, value}: {rank?: number, name?: string, va
                 </div>
 
                 <div className="truncate">
-                    {name}
+                    @{name}
                 </div>
             </div>
             <div className="font-semibold">
@@ -68,4 +82,50 @@ function LeaderboardEntry({rank, name, value}: {rank?: number, name?: string, va
             </div>
         </div>
     )
+}
+
+
+function SocialTermsDrawer() {
+    const router = useRouter();
+    const [hasUserAcceptedTerms, setHasUserAcceptedTerms] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(true);
+    useEffect(() => {
+        async function getUserDecision() {
+            setLoading(true);
+            const userDecision = window.localStorage.getItem("social_terms_accepted");
+            if (userDecision === "true") {
+                setHasUserAcceptedTerms(true);
+                setLoading(false);
+                return;
+            };
+            setHasUserAcceptedTerms(await hasUserAcceptedSocialTerms() as boolean);
+            const userAccepted = await hasUserAcceptedSocialTerms();
+            if (typeof userAccepted === "boolean") {
+                window.localStorage.setItem("social_terms_accepted", userAccepted.toString());
+            }
+            setLoading(false);
+        }
+        getUserDecision();
+    }, []);
+    if (loading) {
+        return null;
+    }
+    if (hasUserAcceptedTerms) {
+        return (
+            <div className="bg-yellow-500 text-background">
+                <div className="max-w-3xl mx-auto p-4">
+                    <div>
+                        <p className="font-semibold ">Stai partecipando alla classifica generale</p>
+                        <p className="text-sm">Mentre partecipi la tua media, numero di ritardi, assenze e numero di note sono visibili a tutti.</p>
+                    </div>
+                    <Button onClick={async () => {
+                        await revokeSocialTerms();
+                        window.localStorage.setItem("social_terms_accepted", "false");
+                        router.push("/");
+                    }} variant={"default"} className="bg-red-700 font-semibold mt-4 hover:bg-red-600 text-white">Revoca autorizzazione dati</Button>
+                </div>
+            </div>
+        )
+    }
+    return null;
 }

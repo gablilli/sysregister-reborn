@@ -107,6 +107,12 @@ export async function setUserName(username: string) {
     if (username.length > 13) {
         return "Username troppo lungo, massimo 13 caratteri.";
     }
+    if (!/^[a-zA-Z0-9-_.!]+$/.test(username)) {
+        return "L'username può contenere solo lettere, numeri, trattini, underscore, punti e punti esclamativi.";
+    }
+    if (username.toLowerCase() === "anonimo") {
+        return "Questo username è riservato.";
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }

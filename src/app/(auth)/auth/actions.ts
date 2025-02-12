@@ -24,7 +24,7 @@ export async function getUserSession({ uid, pass }: { uid: string, pass: string 
         return "Credenziali non valide.";
     }
 
-    await db.user.upsert({
+    const user = await db.user.upsert({
         where: { id: uid },
         create: { id: uid },
         update: { id: uid }
@@ -33,6 +33,7 @@ export async function getUserSession({ uid, pass }: { uid: string, pass: string 
     cookies().set("tokenExpiry", new Date(expiry).toISOString());
     cookies().set("token", token);
     cookies().set("uid", uid);
+    cookies().set("internal_id", user.internalId as string);
 
     getUserDetails();
 }
@@ -63,7 +64,14 @@ export async function verifySession() {
     const dom = new JSDOM(page);
     try {
         if (dom.window.document.querySelector("span.scuola")) {
-            return true;
+            const internalUser = await db.user.findUnique({
+                where: { id: cookies().get("uid")?.value }
+            });
+            if (internalUser && internalUser.internalId === cookies().get("internal_id")?.value) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
