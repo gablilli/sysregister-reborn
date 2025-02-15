@@ -11,23 +11,24 @@ datasource db {
 }
 
 model User {
-  id                     String   @id
-  internalId             String?  @unique @default(uuid())
-  lastServerDataUpdate   DateTime @default(now())
-  hasAcceptedSocialTerms Boolean  @default(false)
-  name                   String?  @unique
+  id                     String                @id
+  internalId             String?               @unique @default(uuid())
+  lastServerDataUpdate   DateTime              @default(now())
+  hasAcceptedSocialTerms Boolean               @default(false)
+  name                   String?               @unique
   school                 String?
   average                Float?
+  permissions            Int                  @default(1)
   posts                  Post[]
-  likes     PostLikeInteraction[]
+  likes                  PostLikeInteraction[]
 }
 
 model Post {
-  id        String   @id @default(uuid())
-  feed      String   @default("main")
+  id        String                @id @default(uuid())
+  feed      String                @default("main")
   content   String
-  createdAt DateTime @default(now())
-  author    User?     @relation(fields: [authorId], references: [internalId])
+  createdAt DateTime              @default(now())
+  author    User?                 @relation(fields: [authorId], references: [internalId])
   authorId  String?
   likes     PostLikeInteraction[]
 }

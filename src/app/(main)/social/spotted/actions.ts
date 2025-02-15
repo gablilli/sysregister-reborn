@@ -3,12 +3,24 @@
 import { verifySession } from "@/app/(auth)/auth/actions";
 import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
+import { hasPermission, PERMISSIONS } from "@/lib/perms";
 import { cookies } from "next/headers";
 
 export async function createPost({ content, feed, isAnon }: { content: string, feed?: string, isAnon?: boolean }) {
     try {
         if (!(await verifySession())) {
             return handleAuthError();
+        }
+        const currentUser = await db.user.findFirst({
+            where: {
+                internalId: cookies().get("internal_id")?.value
+            }
+        });
+        if (!currentUser) {
+            return handleAuthError();
+        }
+        if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
+            return;
         }
         if (!content) {
             return "Lo spot non puó essere vuoto";
@@ -36,10 +48,21 @@ export async function createPost({ content, feed, isAnon }: { content: string, f
     }
 }
 
-export async function getPosts({ feed }: { feed?: string }) {
+export async function getNewPosts({ feed }: { feed?: string }) {
     try {
         if (!(await verifySession())) {
             return handleAuthError();
+        }
+        const currentUser = await db.user.findFirst({
+            where: {
+                internalId: cookies().get("internal_id")?.value
+            }
+        });
+        if (!currentUser) {
+            return handleAuthError();
+        }
+        if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
+            return;
         }
         if (!feed) {
             feed = "main";
@@ -51,6 +74,7 @@ export async function getPosts({ feed }: { feed?: string }) {
             orderBy: {
                 createdAt: "desc",
             },
+            take: 100,
             include: {
                 author: {
                     select: {
@@ -65,10 +89,21 @@ export async function getPosts({ feed }: { feed?: string }) {
             },
         });
         const userId = cookies().get("internal_id")?.value as string;
+        const user = await db.user.findUnique({
+            where: {
+                internalId: userId,
+            },
+            select: {
+                permissions: true,
+            },
+        });
+        if (!user) {
+            return handleAuthError();
+        }
         const postsWithLikes = posts.map(post => ({
             ...post,
             isLikedByUser: post.likes.some(like => like.userId === userId),
-            isPostMadeByUser: post.authorId === userId,
+            canUserDeletePost: post.authorId === userId || (user.permissions && (hasPermission(user.permissions, PERMISSIONS.MOD) || hasPermission(user.permissions, PERMISSIONS.OWNER))) ? true : false,
         }));
         return postsWithLikes;
     } catch {
@@ -76,10 +111,87 @@ export async function getPosts({ feed }: { feed?: string }) {
     }
 }
 
+export async function getTopPosts({ feed }: { feed?: string }) {
+    try {
+        if (!(await verifySession())) {
+            return handleAuthError();
+        }
+        const currentUser = await db.user.findFirst({
+            where: {
+                internalId: cookies().get("internal_id")?.value
+            }
+        });
+        if (!currentUser) {
+            return handleAuthError();
+        }
+        if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
+            return;
+        }
+        if (!feed) {
+            feed = "main";
+        }
+        const posts = await db.post.findMany({
+            where: {
+                feed,
+            },
+            orderBy: {
+                likes: {
+                    _count: "desc",
+                },
+            },
+            take: 100,
+            include: {
+                author: {
+                    select: {
+                        name: true,
+                    },
+                },
+                likes: {
+                    select: {
+                        userId: true,
+                    },
+                }
+            },
+        });
+        const userId = cookies().get("internal_id")?.value as string;
+        const user = await db.user.findUnique({
+            where: {
+                internalId: userId,
+            },
+            select: {
+                permissions: true,
+            },
+        });
+        if (!user) {
+            return handleAuthError();
+        }
+        const postsWithLikes = posts.map(post => ({
+            ...post,
+            isLikedByUser: post.likes.some(like => like.userId === userId),
+            canUserDeletePost: post.authorId === userId || (user.permissions && (hasPermission(user.permissions, PERMISSIONS.MOD) || hasPermission(user.permissions, PERMISSIONS.OWNER))) ? true : false,
+        }));
+        return postsWithLikes;
+    } catch {
+        return handleAuthError();
+    }
+}
+
+
 export async function togglePostLike({ postId }: { postId: string }) {
     try {
         if (!(await verifySession())) {
             return handleAuthError();
+        }
+        const currentUser = await db.user.findFirst({
+            where: {
+                internalId: cookies().get("internal_id")?.value
+            }
+        });
+        if (!currentUser) {
+            return handleAuthError();
+        }
+        if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
+            return;
         }
         const userId = cookies().get("internal_id")?.value as string;
         const post = await db.post.findUnique({
@@ -126,13 +238,48 @@ export async function togglePostLike({ postId }: { postId: string }) {
         return handleAuthError();
     }
 }
-
 export async function deletePost({ postId }: { postId: string }) {
     try {
         if (!(await verifySession())) {
             return handleAuthError();
         }
+        const currentUser = await db.user.findFirst({
+            where: {
+                internalId: cookies().get("internal_id")?.value
+            }
+        });
+        if (!currentUser) {
+            return handleAuthError();
+        }
+        if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
+            return;
+        }
         const userId = cookies().get("internal_id")?.value as string;
+        if (!userId) {
+            return handleAuthError();
+        }
+        const user = await db.user.findUnique({
+            where: {
+                internalId: userId,
+            },
+            select: {
+                permissions: true,
+            },
+        });
+        if (!user) {
+            return handleAuthError();
+        }
+        const post = await db.post.findUnique({
+            where: {
+                id: postId,
+            },
+            select: {
+                authorId: true,
+            },
+        });
+        if (!post || (post.authorId !== userId && !(hasPermission(user.permissions, PERMISSIONS.MOD) || hasPermission(user.permissions, PERMISSIONS.OWNER)))) {
+            return handleAuthError();
+        }
         await db.postLikeInteraction.deleteMany({
             where: {
                 postId,
@@ -141,7 +288,6 @@ export async function deletePost({ postId }: { postId: string }) {
         await db.post.delete({
             where: {
                 id: postId,
-                authorId: userId,
             }
         });
         return;

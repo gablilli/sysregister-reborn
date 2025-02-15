@@ -7,7 +7,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { DrawerTrigger } from "@/components/ui/drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
-import { createPost, deletePost, getPosts, togglePostLike } from "./actions";
+import { createPost, deletePost, getNewPosts, getTopPosts, togglePostLike } from "./actions";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useDoubleTap } from 'use-double-tap';
@@ -27,36 +27,54 @@ export type Post = {
         userId: string;
     }[];
     isLikedByUser: boolean;
-    isPostMadeByUser: boolean;
+    canUserDeletePost: boolean;
 }
 
 export default function Page() {
+    const [currentTab, setCurrentTab] = useState("new");
     const [posts, setPosts] = useState<Post[]>([]);
     const [parent] = useAutoAnimate();
-    async function tryGetPosts() {
-        const sessionPosts = window.sessionStorage.getItem("posts");
-        if (sessionPosts) {
-            setPosts(JSON.parse(sessionPosts));
-        } else {
-            const posts = await getPosts({ feed: "main" });
-            if (posts) {
-                setPosts(posts);
-                window.sessionStorage.setItem("posts", JSON.stringify(posts));
-            }
+    async function tryGetNewPosts() {
+        const posts = await getNewPosts({ feed: "main" });
+        if (posts) {
+            setPosts(posts);
         }
-        window.addEventListener("beforeunload", () => {
-            window.sessionStorage.removeItem("posts");
-        });
+    }
+
+    async function tryGetTopPosts() {
+        const posts = await getTopPosts({ feed: "main" });
+        if (posts) {
+            setPosts(posts);
+        }
+    }
+
+    async function tryUpdate() {
+        setPosts([]);
+        if (currentTab === "top") {
+            await tryGetTopPosts();
+        }
+        if (currentTab === "new") {
+            await tryGetNewPosts();
+        }
     }
 
     useEffect(() => {
-        tryGetPosts();
+        tryGetNewPosts();
     }, []);
     return (
         <div>
             <div>
                 <div className="p-4 max-w-3xl mx-auto">
-                    <Tabs className="w-full z-10" defaultValue="new">
+                    <Tabs className="w-full z-10" defaultValue="new" value={currentTab} onValueChange={async (value) => {
+                        setPosts([]);
+                        if (value === "new") {
+                            await tryGetNewPosts();
+                            setCurrentTab("new");
+                        } else {
+                            await tryGetTopPosts();
+                            setCurrentTab("top");
+                        }
+                    }}>
                         <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
                             <div className="flex items-center mb-4 justify-between">
                                 <div>
@@ -67,7 +85,7 @@ export default function Page() {
                                         <Button className="pl-2.5 pr-3.5 text-sm" variant={"secondary"}><Plus />Spotta qualcosa</Button>
                                     </DrawerTrigger>
                                     <DrawerContent>
-                                        <SpotPostDrawerContent setPosts={setPosts} />
+                                        <SpotPostDrawerContent tryUpdatePosts={tryUpdate} />
                                     </DrawerContent>
                                 </Drawer>
                             </div>
@@ -76,9 +94,11 @@ export default function Page() {
                                 <TabsTrigger value="top">Top spot</TabsTrigger>
                             </TabsList>
                         </div>
+                        {posts.length === 0 && (
+                            <Loader className="mx-auto animate-spin mt-4" />)}
                         <TabsContent ref={parent} value="new" className="gap-6 flex flex-col">
                             {posts && posts.sort((a: Post, b: Post) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((post) => (
-                                <SpotEntry key={post.id} post={post} setPosts={setPosts} postArray={posts} />
+                                <SpotEntry key={post.id} post={post} tryUpdatePosts={tryUpdate} />
                             ))}
                             {posts.length >= 99 && (
                                 <p className="text-sm text-center opacity-70">Solo gli ultimi 100 spot sono visibili.</p>
@@ -86,7 +106,7 @@ export default function Page() {
                         </TabsContent>
                         <TabsContent ref={parent} value="top" className="gap-6 flex flex-col">
                             {posts && posts.sort((a: Post, b: Post) => b.likes.length - a.likes.length).map((post: Post) => (
-                                <SpotEntry key={post.id} post={post} setPosts={setPosts} postArray={posts} />
+                                <SpotEntry key={post.id} post={post} tryUpdatePosts={tryUpdate} />
                             ))}
                             {posts.length >= 99 && (
                                 <p className="text-sm text-center opacity-70">Solo gli ultimi 100 spot sono visibili.</p>
@@ -99,7 +119,7 @@ export default function Page() {
     )
 }
 
-function SpotEntry({ post, setPosts, postArray }: { post: Post, setPosts: (posts: Post[]) => void, postArray: Post[] }) {
+function SpotEntry({ post, tryUpdatePosts }: { post: Post, tryUpdatePosts: () => Promise<void> }) {
     const [isLiked, setLiked] = useState(post.isLikedByUser);
     const [likeCount, setLikeCount] = useState(post.likes.length);
     const likeGesture = useDoubleTap(async () => {
@@ -111,13 +131,6 @@ function SpotEntry({ post, setPosts, postArray }: { post: Post, setPosts: (posts
         setLiked(newLikedState);
         setLikeCount(likeCount + (newLikedState ? 1 : -1));
         await togglePostLike({ postId: post.id });
-
-        // Update the global posts variable
-        const updatedPosts = postArray.map(p =>
-            p.id === post.id ? { ...p, isLikedByUser: newLikedState, likes: newLikedState ? [...p.likes, { userId: "currentUserId" }] : p.likes.filter(like => like.userId !== "currentUserId") } : p
-        );
-        setPosts(updatedPosts);
-        window.sessionStorage.setItem("posts", JSON.stringify(updatedPosts));
     }
 
     function formatPublishDate(uploadDate: Date) {
@@ -165,7 +178,7 @@ function SpotEntry({ post, setPosts, postArray }: { post: Post, setPosts: (posts
                         </div>
                     </div>
                     <div>
-                        {post.isPostMadeByUser && (
+                        {post.canUserDeletePost && (
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Ellipsis />
@@ -176,20 +189,22 @@ function SpotEntry({ post, setPosts, postArray }: { post: Post, setPosts: (posts
                                             <div className="w-full text-sm text-accent px-2 py-1.5 flex items-center gap-3"><Trash size={16} />Elimina Spot</div>
                                         </DrawerTrigger>
                                         <DrawerContent>
-                                            <DrawerHeader>
-                                                <DrawerTitle className="text-2xl max-w-[75%] mx-auto">Sei sicuro di voler eliminare questo spot?</DrawerTitle>
-                                                <DrawerDescription className="opacity-50">Perderai tutti e {post.likes.length} like</DrawerDescription>
-                                            </DrawerHeader>
-                                            <DrawerFooter className="mt-8 mb-4 grid grid-rows-1 grid-cols-2">
-                                                <DrawerClose className="flex-1 flex-shrink-0">
-                                                    <Button className="w-full" variant={"outline"}>Annulla</Button>
-                                                </DrawerClose>
-                                                <Button className="flex-1 flex-shrink-0" onClick={async () => {
-                                                    const updatedPosts = postArray.filter(p => p.id !== post.id);
-                                                    setPosts(updatedPosts);
-                                                    await deletePost({ postId: post.id });
-                                                }}>Elimina</Button>
-                                            </DrawerFooter>
+                                            <div className="mx-auto w-full max-w-sm">
+                                                <DrawerHeader>
+                                                    <DrawerTitle className="text-2xl max-w-[75%] mx-auto text-center">Sei sicuro di voler eliminare questo spot?</DrawerTitle>
+                                                    <DrawerDescription className="opacity-50 text-center">Perderai tutti e {post.likes.length} like</DrawerDescription>
+                                                </DrawerHeader>
+                                                <DrawerFooter className="mt-8 mb-4 grid grid-rows-1 grid-cols-2">
+                                                    <DrawerClose className="flex-1 flex-shrink-0" asChild>
+                                                        <Button className="w-full" variant={"outline"}>Annulla</Button>
+                                                    </DrawerClose>
+                                                    <Button className="flex-1 flex-shrink-0" onClick={async () => {
+                                                        await deletePost({ postId: post.id });
+                                                        await tryUpdatePosts();
+                                                        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                                                    }}>Elimina</Button>
+                                                </DrawerFooter>
+                                            </div>
                                         </DrawerContent>
                                     </Drawer>
                                 </PopoverContent>
@@ -210,22 +225,18 @@ function SpotEntry({ post, setPosts, postArray }: { post: Post, setPosts: (posts
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
-function SpotPostDrawerContent({ setPosts }: { setPosts: (posts: Post[]) => void }) {
+function SpotPostDrawerContent({ tryUpdatePosts }: { tryUpdatePosts: () => Promise<void> }) {
     const [text, setText] = useState("");
     const [isAnon, setAnon] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function updatePosts() {
-        const posts = await getPosts({ feed: "main" });
-        if (posts) {
-            setPosts(posts);
-            window.sessionStorage.setItem("posts", JSON.stringify(posts));
-        }
+        await tryUpdatePosts();
     }
     return (
         <div className="mx-auto w-full max-w-sm">
@@ -269,18 +280,20 @@ function SpotPostDrawerContent({ setPosts }: { setPosts: (posts: Post[]) => void
                     <div className="text-sm text-red-500 mt-2">{error}</div>
                 )}
                 <Button onClick={async () => {
-                    setLoading(true);
-                    const error = await createPost({ content: text, isAnon });
-                    if (error) {
-                        setError(error);
-                        setTimeout(() => setError(null), 5000);
+                    if (!loading) {
+                        setLoading(true);
+                        const error = await createPost({ content: text, isAnon });
+                        if (error) {
+                            setError(error);
+                            setTimeout(() => setError(null), 5000);
+                            setLoading(false);
+                            return;
+                        }
+                        await updatePosts();
                         setLoading(false);
-                        return;
+                        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
-                    await updatePosts();
-                    setLoading(false);
-                    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}>
                     {loading ? <Loader className="animate-spin" /> : isAnon ? "Pubblica come anonimo" : "Pubblica"}
                 </Button>

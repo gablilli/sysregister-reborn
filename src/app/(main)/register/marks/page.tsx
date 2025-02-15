@@ -158,18 +158,18 @@ export default function Page() {
                 <p className="text-lg font-semibold">Media del {periods[index].periodDesc}</p>
                 <Gauge value={parseFloat(getGradesAverage(marks.slice().reverse()[index]).toFixed(3))} size={120} />
                 </div>
-              {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 5.5).length !== 0 && (
+              {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 6).length !== 0 && (
                 <div>
-                  <p className="font-semibold text-2xl mb-1.5">Da recuperare ({subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 5.5).length})</p>
-                  {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 5.5).map(subject => (
+                  <p className="font-semibold text-2xl mb-1.5">Da recuperare ({subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 6).length})</p>
+                  {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 6).map(subject => (
                     <SubjectCard key={subject.id} subject={subject} />
                   ))}
                 </div>
               )}
-              {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) >= 5.5).length !== 0 && (
+              {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) >= 6).length !== 0 && (
                 <div>
-                  <p className="font-semibold text-2xl mb-1.5">Sufficienti ({subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) >= 5.5).length})</p>
-                  {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) >= 5.5).map(subject => (
+                  <p className="font-semibold text-2xl mb-1.5">Sufficienti ({subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) >= 6).length})</p>
+                  {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) >= 6).map(subject => (
                     <SubjectCard key={subject.id} subject={subject} />
                   ))}
                 </div>
@@ -184,7 +184,7 @@ export default function Page() {
 
 function SubjectCard({ subject }: { subject: Subject }) {
   const calculateNeededValue = (average: number, count: number) => {
-    return ((5.5 * (count + 1)) - (average * count)).toFixed(2);
+    return ((6 * (count + 1)) - (average * count)).toFixed(2);
   }
   return (
     <Link href={`/register/marks/${subject.name}`} className="relative flex gap-4 items-start justify-start overflow-hidden p-4 rounded-xl mb-4">
@@ -195,7 +195,7 @@ function SubjectCard({ subject }: { subject: Subject }) {
       <div className="flex-1">
         <p className="text-MD font-semibold">{subject.name.split('-')[0]}</p>
         <p className="opacity-55 text-text text-sm">
-          {subject.marks && getGradesAverage(subject.marks) < 5.5 ? (
+          {subject.marks && getGradesAverage(subject.marks) < 6 ? (
             <>
               {parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
                 <>Devi prendere almeno <b>10 e un altro voto</b> per arrivare alla sufficienza.</>

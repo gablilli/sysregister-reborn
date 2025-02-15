@@ -5,6 +5,22 @@ import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 
+export async function getUserPermissions() {
+    if (!(await verifySession())) {
+        return handleAuthError();
+    }
+    try {
+        return await db.user.findUnique({
+            where: { id: cookies().get("uid")?.value },
+            select: {
+                permissions: true
+            }
+        });
+    } catch {
+        return "Internal Server Error.";
+    }
+}
+
 export async function hasUserAcceptedSocialTerms() {
     if (!(await verifySession())) {
         return handleAuthError();

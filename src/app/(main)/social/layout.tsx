@@ -1,11 +1,38 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { acceptSocialTerms, hasUserAcceptedSocialTerms } from "./actions";
+import { acceptSocialTerms, getUserPermissions, hasUserAcceptedSocialTerms } from "./actions";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { hasPermission, PERMISSIONS } from "@/lib/perms";
+import { TriangleAlert } from "lucide-react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+    const [hasUserPermission, setHasUserPermission] = useState<boolean>(true);
+    useEffect(() => {
+        async function fetchUserPermission() {
+            const userPermission = await getUserPermissions();
+            if (!userPermission) {
+                setHasUserPermission(false);
+                return;
+            }
+            if (!(typeof userPermission === "object" && hasPermission(userPermission.permissions, PERMISSIONS.VERIFIED))) {
+                setHasUserPermission(false);
+            }
+        }
+        fetchUserPermission();
+    })
+    if (!hasUserPermission) {
+        return (
+            <div className=" max-w-3xl mx-auto px-4 text-center h-[calc(100svh-110px-80px)] flex-col gap-4 flex items-center justify-center">
+                <TriangleAlert size={80} className="text-accent" />
+                <div>
+                    <p className="font-semibold text-xl">Sei stato bannato dalle funzioni social.</p>
+                    <p className="text-sm opacity-60 mt-1">Puoi continuare ad usare il resto delle funzioni, se pensi che questo sia un errore, contatta <b className="underline">@sys.white</b> su instagram tramite DM oppure scrivi una mail a <b className="underline">commercial@syswhite.dev</b> a riguardo.</p>
+                </div>
+            </div>
+        )
+    }
     return (
         <div>
             <SocialTermsDrawer />
@@ -37,9 +64,11 @@ function SocialTermsDrawer() {
         }
         getUserDecision();
     }, []);
+
     if (loading) {
         return null;
     }
+
     return (
         <Drawer open={!hasUserAcceptedTerms}>
             <DrawerContent>
