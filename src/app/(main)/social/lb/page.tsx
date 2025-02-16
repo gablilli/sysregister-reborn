@@ -42,12 +42,12 @@ export default function Page() {
                             <LeaderboardEntry key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
-                    <TabsContent value="delays">
+                    <TabsContent value="delays" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.delaysNumber - a.delaysNumber).map((entry, index) => (
                             <LeaderboardEntry key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
-                    <TabsContent value="absences">
+                    <TabsContent value="absences" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.absenceHours - a.absenceHours).map((entry, index) => (
                             <LeaderboardEntry key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
                         ))}
@@ -72,8 +72,7 @@ function LeaderboardEntry({ rank, name, value, precision, singleLabel, label, is
                 </div>
             </div>
             <div className="font-semibold">
-                {value === 0 ? '-' : value?.toFixed(precision || 0)} {value !== 1 && label}
-                {value === 1 && singleLabel ? singleLabel : ""}
+                {value === 0 ? '-' : `${value?.toFixed(precision || 0)} ${value !== 1 ? label : singleLabel || ""}`}
             </div>
         </div>
     )
