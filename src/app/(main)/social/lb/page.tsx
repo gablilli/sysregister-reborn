@@ -72,7 +72,14 @@ function LeaderboardEntry({ rank, name, value, precision, singleLabel, label, is
                 </div>
             </div>
             <div className="font-semibold">
-                {value === 0 ? '-' : `${value?.toFixed(precision || 0)} ${value !== 1 ? label : singleLabel || ""}`}
+                {value === 0 || !value ? '-' : value?.toFixed(precision || 0)} {" "}
+                {value !== 0 && value && (
+                    <>
+                        {value !== 1 && label}
+                        {value === 1 && singleLabel ? singleLabel : ""}
+                    </>
+                )}
+
             </div>
         </div>
     )
