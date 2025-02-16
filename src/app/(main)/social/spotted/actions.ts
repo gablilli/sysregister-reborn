@@ -4,16 +4,21 @@ import { verifySession } from "@/app/(auth)/auth/actions";
 import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { hasPermission, PERMISSIONS } from "@/lib/perms";
+import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
 
 export async function createPost({ content, feed, isAnon }: { content: string, feed?: string, isAnon?: boolean }) {
     try {
+        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        if (!userData) {
+            return handleAuthError();
+        }
         if (!(await verifySession())) {
             return handleAuthError();
         }
         const currentUser = await db.user.findFirst({
             where: {
-                internalId: cookies().get("internal_id")?.value
+                internalId: userData.internalId
             }
         });
         if (!currentUser) {
@@ -31,7 +36,7 @@ export async function createPost({ content, feed, isAnon }: { content: string, f
         if (!feed) {
             feed = "main";
         }
-        let authorId: string | null = cookies().get("internal_id")?.value as string;
+        let authorId: string | null = userData.internalId as string;
         if (isAnon) {
             authorId = null;
         }
@@ -50,12 +55,16 @@ export async function createPost({ content, feed, isAnon }: { content: string, f
 
 export async function getNewPosts({ feed }: { feed?: string }) {
     try {
+        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        if (!userData) {
+            return handleAuthError();
+        }
         if (!(await verifySession())) {
             return handleAuthError();
         }
         const currentUser = await db.user.findFirst({
             where: {
-                internalId: cookies().get("internal_id")?.value
+                internalId: userData.internalId
             }
         });
         if (!currentUser) {
@@ -88,7 +97,7 @@ export async function getNewPosts({ feed }: { feed?: string }) {
                 }
             },
         });
-        const userId = cookies().get("internal_id")?.value as string;
+        const userId = userData.internalId;
         const user = await db.user.findUnique({
             where: {
                 internalId: userId,
@@ -113,12 +122,16 @@ export async function getNewPosts({ feed }: { feed?: string }) {
 
 export async function getTopPosts({ feed }: { feed?: string }) {
     try {
+        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        if (!userData) {
+            return handleAuthError();
+        }
         if (!(await verifySession())) {
             return handleAuthError();
         }
         const currentUser = await db.user.findFirst({
             where: {
-                internalId: cookies().get("internal_id")?.value
+                internalId: userData.internalId
             }
         });
         if (!currentUser) {
@@ -153,7 +166,7 @@ export async function getTopPosts({ feed }: { feed?: string }) {
                 }
             },
         });
-        const userId = cookies().get("internal_id")?.value as string;
+        const userId = userData.internalId
         const user = await db.user.findUnique({
             where: {
                 internalId: userId,
@@ -179,12 +192,16 @@ export async function getTopPosts({ feed }: { feed?: string }) {
 
 export async function togglePostLike({ postId }: { postId: string }) {
     try {
+        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        if (!userData) {
+            return handleAuthError();
+        }
         if (!(await verifySession())) {
             return handleAuthError();
         }
         const currentUser = await db.user.findFirst({
             where: {
-                internalId: cookies().get("internal_id")?.value
+                internalId: userData.internalId
             }
         });
         if (!currentUser) {
@@ -193,7 +210,7 @@ export async function togglePostLike({ postId }: { postId: string }) {
         if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
             return;
         }
-        const userId = cookies().get("internal_id")?.value as string;
+        const userId = userData.internalId;
         const post = await db.post.findUnique({
             where: {
                 id: postId,
@@ -240,12 +257,16 @@ export async function togglePostLike({ postId }: { postId: string }) {
 }
 export async function deletePost({ postId }: { postId: string }) {
     try {
+        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        if (!userData) {
+            return handleAuthError();
+        }
         if (!(await verifySession())) {
             return handleAuthError();
         }
         const currentUser = await db.user.findFirst({
             where: {
-                internalId: cookies().get("internal_id")?.value
+                internalId: userData.internalId
             }
         });
         if (!currentUser) {
@@ -254,7 +275,7 @@ export async function deletePost({ postId }: { postId: string }) {
         if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
             return;
         }
-        const userId = cookies().get("internal_id")?.value as string;
+        const userId = userData.internalId;
         if (!userId) {
             return handleAuthError();
         }
@@ -291,8 +312,7 @@ export async function deletePost({ postId }: { postId: string }) {
             }
         });
         return;
-    } catch (e) {
-        console.log(e);
+    } catch {
         return handleAuthError();
     }
 }

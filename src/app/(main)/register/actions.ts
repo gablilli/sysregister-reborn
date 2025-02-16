@@ -3,15 +3,20 @@ import { cookies } from "next/headers";
 import { JSDOM } from "jsdom";
 import { GradeType, PeriodType, Subject } from "@/lib/types";
 import { handleAuthError } from "@/lib/api";
+import { getUserDetailsFromToken } from "@/lib/utils";
 
 export async function getPeriods(inputPage?: string) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     let page;
     if (inputPage) {
         page = inputPage;
     } else {
         page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
             headers: {
-                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
             },
         })).text();
     }
@@ -45,13 +50,17 @@ const markTable: { [key: string]: number } = {
 };
 
 export async function getMarks(inputPage?: string) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     let page;
     if (inputPage) {
         page = inputPage;
     } else {
         page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
             headers: {
-                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
             },
         })).text();
     }
@@ -94,10 +103,43 @@ export async function getMarks(inputPage?: string) {
     }
 }
 
+
+export async function getPresence(inputPage?: string) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
+    let page;
+    if (inputPage) {
+        page = inputPage;
+    } else {
+        page = await (await fetch("https://web.spaggiari.eu/tic/app/default/consultasingolo.php#eventi", {
+            headers: {
+                "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
+            },
+        })).text();
+    }
+    const dom = new JSDOM(page);
+    try {
+        const absenceHours = dom.window.document.querySelector(`td.griglia_sep_gray[colspan='17']`)?.querySelector(".double")?.textContent?.split(":")[1].split("(")[0].trim() || "";
+        const delaysNumber = dom.window.document.querySelector(`tr.rigtab[height='57']`)?.children[8]?.querySelector(".double")?.textContent?.trim() || "";
+        return {
+            absenceHours: parseFloat(absenceHours) || 0,
+            delaysNumber: parseFloat(delaysNumber) || 0,
+        };
+    } catch {
+        return handleAuthError();
+    }
+}
+
 export async function getMarkNotes(evtId: number) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     const page = await (await fetch(`https://web.spaggiari.eu/cvv/app/default/genitori_voti.php?ope=voto_detail&evento_id=${evtId}`, {
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
         },
     })).text();
     const dom = new JSDOM(page);
@@ -112,9 +154,13 @@ export async function getMarkNotes(evtId: number) {
 }
 
 export async function getSubject(subjectName: string) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     const subjectIdPage = await (await fetch(`https://web.spaggiari.eu/fml/app/default/regclasse_lezioni_xstudenti.php`, {
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
         },
     })).text();
     const subjectIdDom = new JSDOM(subjectIdPage);
@@ -137,11 +183,19 @@ export async function getSubject(subjectName: string) {
     }
 }
 
+export async function getUserPresenceData() {
+
+}
+
 // combined functions
 export async function getMarksAndPeriods() {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     const page = await (await fetch("https://web.spaggiari.eu/cvv/app/default/genitori_voti.php", {
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
         },
     })).text();
     const marks = await getMarks(page);

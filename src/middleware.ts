@@ -4,15 +4,16 @@ import { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
     const token = request.cookies.get('token');
+    const internal_token = request.cookies.get('internal_token');
     const tokenExpiry = request.cookies.get('tokenExpiry');
     const tokenExpiryDate = tokenExpiry ? new Date(tokenExpiry.toString()) : null;
 
     if (request.nextUrl.pathname !== '/auth') {
-        if (!token || !tokenExpiryDate || tokenExpiryDate <= new Date()) {
+        if (!token || !tokenExpiryDate || tokenExpiryDate <= new Date() || !internal_token) {
             return NextResponse.redirect(new URL('/auth', request.url));
         }
     } else {
-        if (token && tokenExpiryDate && tokenExpiryDate > new Date()) {
+        if (token && tokenExpiryDate && tokenExpiryDate > new Date() && internal_token) {
             return NextResponse.redirect(new URL('/', request.url));
         }
     }

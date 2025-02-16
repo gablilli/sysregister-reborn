@@ -2,13 +2,18 @@
 import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { hasPermission, PERMISSIONS } from "@/lib/perms";
+import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
 
 export async function getLeaderboard() {
-    const userId = cookies().get("uid")?.value
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
+    const userId = userData.uid;
     const currentUser = await db.user.findFirst({
         where: {
-            internalId: cookies().get("internal_id")?.value
+            internalId: userData.internalId
         }
     });
     if (!currentUser) {
@@ -18,12 +23,11 @@ export async function getLeaderboard() {
         return;
     }
     const leaderboard = await db.user.findMany({
-        orderBy: {
-            average: 'desc'
-        },
         select: {
             name: true,
             average: true,
+            delays: true,
+            absencesHours: true,
             hasAcceptedSocialTerms: true,
             id: true
         }
@@ -31,6 +35,8 @@ export async function getLeaderboard() {
     return leaderboard.map(user => ({
         isRequestingUser: user.id === userId,
         name: user.name,
-        average: user.average
+        average: user.average,
+        delaysNumber: user.delays,
+        absenceHours: user.absencesHours
     }));
 }

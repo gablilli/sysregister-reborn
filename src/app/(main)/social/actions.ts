@@ -3,15 +3,20 @@
 import { verifySession } from "@/app/(auth)/auth/actions";
 import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
+import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
 
 export async function getUserPermissions() {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }
     try {
         return await db.user.findUnique({
-            where: { id: cookies().get("uid")?.value },
+            where: { id: userData.uid },
             select: {
                 permissions: true
             }
@@ -22,12 +27,16 @@ export async function getUserPermissions() {
 }
 
 export async function hasUserAcceptedSocialTerms() {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }
     try {
         const user = await db.user.findUnique({
-            where: { id: cookies().get("uid")?.value }
+            where: { id: userData.uid }
         });
         return user?.hasAcceptedSocialTerms;
     } catch {
@@ -35,14 +44,17 @@ export async function hasUserAcceptedSocialTerms() {
     }
 }
 
-// this seems unsafe... need better way to handle user id
 export async function acceptSocialTerms() {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }
     try {
         await db.user.update({
-            where: { id: cookies().get("uid")?.value },
+            where: { id: userData.uid },
             data: {
                 hasAcceptedSocialTerms: true
             }
@@ -53,12 +65,16 @@ export async function acceptSocialTerms() {
 }
 
 export async function revokeSocialTerms() {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }
     try {
         await db.user.update({
-            where: { id: cookies().get("uid")?.value },
+            where: { id: userData.uid },
             data: {
                 hasAcceptedSocialTerms: false
             }

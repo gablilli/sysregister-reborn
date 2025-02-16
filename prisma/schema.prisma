@@ -18,7 +18,9 @@ model User {
   name                   String?               @unique
   school                 String?
   average                Float?
-  permissions            Int                  @default(1)
+  absencesHours          Float?
+  delays                 Int?
+  permissions            Int                   @default(1)
   posts                  Post[]
   likes                  PostLikeInteraction[]
 }
@@ -39,5 +41,6 @@ model PostLikeInteraction {
   postId    String
   user      User     @relation(fields: [userId], references: [internalId])
   userId    String
+  type      String   @default("upvote")
   createdAt DateTime @default(now())
 }

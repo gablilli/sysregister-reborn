@@ -4,16 +4,21 @@ import { AgendaItemType, GradeType } from "@/lib/types";
 import { cookies } from "next/headers";
 import { getUserDetails, verifySession } from "../(auth)/auth/actions";
 import { db } from "@/lib/db";
-import { getMarks } from "./register/actions";
+import { getMarks, getPresence } from "./register/actions";
+import { getUserDetailsFromToken } from "@/lib/utils";
 
 export async function getDayAgenda(date: Date) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     const formData = new FormData();
     formData.append("start", Math.floor(new Date(date.setHours(0, 0, 0, 0)).getTime() / 1000).toString());
     formData.append("end", Math.floor(new Date(date.setDate(date.getDate() + 1)).setHours(0, 0, 0, 0) / 1000).toString());
     const res = await fetch(`https://web.spaggiari.eu/fml/app/default/agenda_studenti.php?ope=get_events`, {
         method: "POST",
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
         },
         body: formData
     })
@@ -27,10 +32,14 @@ export async function getDayAgenda(date: Date) {
 }
 
 export async function getDayLessons(date: Date) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     const formattedDate = date.toISOString().split('T')[0];
     const res = await fetch(`https://web.spaggiari.eu/fml/app/default/attivita_studente.php?a=get_lezioni&data=${formattedDate}`, {
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${cookies().get("uid")?.value};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
         },
     });
     let data;
@@ -44,16 +53,21 @@ export async function getDayLessons(date: Date) {
 
 // SERVER-DATA-SECTION
 export async function updateServerData() {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     if (!(await verifySession())) {
         return handleAuthError();
     }
     const user = await db.user.findUnique({
-        where: { id: cookies().get("uid")?.value }
+        where: { id: userData.uid }
     });
 
     if (!user?.hasAcceptedSocialTerms) {
         return;
     };
+
     if (!user.school) {
         const school = await getUserDetails();
         if (school) {
@@ -65,20 +79,15 @@ export async function updateServerData() {
             });
         }
     }
-    if (!user.average || user.average === 0) {
-        const marks: GradeType[] = await getMarks() as GradeType[];
-        const totalAverage =
-            marks
-                .filter((mark) => mark.color !== "blue")
-                .reduce((acc, mark) => acc + mark.decimalValue, 0) /
-            marks.filter((mark) => mark.color !== "blue").length;
-        await db.user.update({
-            where: { id: user.id },
-            data: {
-                average: totalAverage
-            }
-        });
+
+    if (!user.average) {
+        updateServerAverage(user.id);
     }
+    if (!user.absencesHours || !user.delays) {
+        updateServerPresenceData(user.id);
+    }
+
+
     if (!user.name) {
         return "username_not_set";
     }
@@ -88,6 +97,11 @@ export async function updateServerData() {
         return "updated";
     }
 
+    updateServerAverage(user.id);
+    updateServerPresenceData(user.id);
+}
+
+async function updateServerAverage(userId: string) {
     const marks: GradeType[] = await getMarks() as GradeType[];
     const totalAverage =
         marks
@@ -95,7 +109,7 @@ export async function updateServerData() {
             .reduce((acc, mark) => acc + mark.decimalValue, 0) /
         marks.filter((mark) => mark.color !== "blue").length;
     await db.user.update({
-        where: { id: user.id },
+        where: { id: userId },
         data: {
             average: totalAverage,
             lastServerDataUpdate: new Date()
@@ -103,7 +117,25 @@ export async function updateServerData() {
     });
 }
 
+async function updateServerPresenceData(userId: string) {
+    const presenceData = await getPresence();
+    if (presenceData && presenceData.delaysNumber && presenceData.absenceHours) {
+        await db.user.update({
+            where: { id: userId },
+            data: {
+                delays: presenceData.delaysNumber,
+                absencesHours: presenceData.absenceHours,
+                lastServerDataUpdate: new Date()
+            }
+        });
+    }
+}
+
 export async function setUserName(username: string) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
     if (username.length > 13) {
         return "Username troppo lungo, massimo 13 caratteri.";
     }
@@ -118,7 +150,7 @@ export async function setUserName(username: string) {
     }
     try {
         await db.user.update({
-            where: { id: cookies().get("uid")?.value },
+            where: { id: userData.uid },
             data: {
                 name: username
             }

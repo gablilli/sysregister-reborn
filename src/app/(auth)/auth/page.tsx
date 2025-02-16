@@ -37,7 +37,6 @@ export default function Page() {
             router.push(goTo);
           } else {
             router.push("/");
-
           }
         }
       } catch {

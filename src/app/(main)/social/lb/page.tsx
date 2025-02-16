@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { getLeaderboard } from "./actions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
-import Wip from "@/components/Wip";
 import { useRouter } from "next/navigation";
 import { hasUserAcceptedSocialTerms, revokeSocialTerms } from "../actions";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,8 @@ import { Button } from "@/components/ui/button";
 type LeaderboardEntryType = {
     name: string;
     average: number;
+    absenceHours: number;
+    delaysNumber: number;
     isRequestingUser: boolean;
 }
 
@@ -26,32 +27,30 @@ export default function Page() {
     return (
         <div>
             <SocialTermsDrawer />
-
-
             <div className="p-4 max-w-3xl mx-auto">
                 <Tabs className="w-full" defaultValue="media">
                     <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
                         <p className="text-3xl mb-2 font-semibold">Classifiche</p>
-                        <TabsList className="grid mb-2 w-full grid-cols-4">
+                        <TabsList className="grid mb-2 w-full grid-cols-3">
                             <TabsTrigger value="media">Media</TabsTrigger>
                             <TabsTrigger value="delays">Ritardi</TabsTrigger>
                             <TabsTrigger value="absences">Assenze</TabsTrigger>
-                            <TabsTrigger value="note">Note</TabsTrigger>
                         </TabsList>
                     </div>
                     <TabsContent value="media" className="gap-2 flex flex-col">
-                        {leaderboard?.map((entry, index) => (
-                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} value={entry.average} isRequestingUser={entry.isRequestingUser} />
+                        {leaderboard?.sort((a, b) => b.average - a.average).map((entry, index) => (
+                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="delays">
-                        <Wip />
+                        {leaderboard?.sort((a, b) => b.delaysNumber - a.delaysNumber).map((entry, index) => (
+                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
+                        ))}
                     </TabsContent>
                     <TabsContent value="absences">
-                        <Wip />
-                    </TabsContent>
-                    <TabsContent value="note">
-                        <Wip />
+                        {leaderboard?.sort((a, b) => b.absenceHours - a.absenceHours).map((entry, index) => (
+                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
+                        ))}
                     </TabsContent>
                 </Tabs>
             </div>
@@ -59,7 +58,7 @@ export default function Page() {
     )
 }
 
-function LeaderboardEntry({ rank, name, value, isRequestingUser }: { rank: number, name: string, value: number, isRequestingUser?: boolean }) {
+function LeaderboardEntry({ rank, name, value, precision, singleLabel, label, isRequestingUser }: { rank: number, name: string, value: number, singleLabel?: string, precision?: number, label?: string, isRequestingUser?: boolean }) {
     return (
         <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
             <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
@@ -73,7 +72,8 @@ function LeaderboardEntry({ rank, name, value, isRequestingUser }: { rank: numbe
                 </div>
             </div>
             <div className="font-semibold">
-                {value === 0 ? '-' : value?.toFixed(3)}
+                {value === 0 ? '-' : value?.toFixed(precision || 0)} {value !== 1 && label}
+                {value === 1 && singleLabel ? singleLabel : ""}
             </div>
         </div>
     )

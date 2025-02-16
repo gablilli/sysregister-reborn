@@ -46,7 +46,6 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // clear agenda and lessons when day changes
     setLessons([]);
     setAgenda([]);
 
