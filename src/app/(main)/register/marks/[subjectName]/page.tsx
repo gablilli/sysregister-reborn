@@ -245,8 +245,7 @@ function SubjectMarkEntry({ mark }: { mark: GradeType }) {
             {notes != null && (
                 <div className="flex items-center mt-3 relative p-4 rounded-lg overflow-hidden">
                     <div className="bg-secondary -z-10 opacity-30 absolute top-0 bottom-0 left-0 right-0" />
-                    <span className="whitespace-pre-wrap">{notes}</span>
-                    {!notes && <span className="italic font-semibold">Il docente non ha inserito note per la famiglia.</span>}
+                    {!notes ? <span className="italic font-semibold">Il docente non ha inserito note per la famiglia.</span> : <span className="whitespace-pre-wrap">{notes}</span>}
                 </div>
             )}
         </div>

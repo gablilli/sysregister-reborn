@@ -34,10 +34,12 @@ function MarksPageLink() {
         setPeriods(JSON.parse(periodsStore));
       } else {
         const fullData = await getMarksAndPeriods();
-        setMarks(fullData.marks || []);
-        setPeriods(fullData.periods || []);
-        window.sessionStorage.setItem("marks", JSON.stringify(fullData.marks));
-        window.sessionStorage.setItem("periods", JSON.stringify(fullData.periods));
+        if (fullData) {
+          setMarks(fullData.marks || []);
+          setPeriods(fullData.periods || []);
+          window.sessionStorage.setItem("marks", JSON.stringify(fullData.marks));
+          window.sessionStorage.setItem("periods", JSON.stringify(fullData.periods));
+        }
       }
     }
     getMarksAndPeriodsData();
