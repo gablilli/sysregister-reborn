@@ -1,3 +1,15 @@
+export type Notification = {
+    id: string;
+    title: string;
+    content: string;
+    expiryDate: string;
+    createDate: string;
+    type: string;
+    viewCount?: number;
+    link: string | null;
+    linkTitle: string | null;
+}
+
 export type AgendaItemType = {
     id: string;
     title: string;

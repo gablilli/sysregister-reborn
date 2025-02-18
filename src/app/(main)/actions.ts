@@ -1,6 +1,6 @@
 "use server";
 import { handleAuthError } from "@/lib/api";
-import { AgendaItemType, GradeType } from "@/lib/types";
+import { AgendaItemType, GradeType, Notification } from "@/lib/types";
 import { cookies } from "next/headers";
 import { getUserDetails, verifySession } from "../(auth)/auth/actions";
 import { db } from "@/lib/db";
@@ -52,6 +52,97 @@ export async function getDayLessons(date: Date) {
 }
 
 // SERVER-DATA-SECTION
+export async function getAllNotifications(): Promise<Notification[] | void> {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
+    try {
+        const notifications = await db.notifications.findMany({
+            where: {
+                expiryDate: {
+                    gte: new Date()
+                }
+            },
+            select: {
+                id: true,
+                createDate: true,
+                expiryDate: true,
+                title: true,
+                content: true,
+                type: true,
+                link: true,
+                linkTitle: true,
+            }
+        });
+        if (!notifications) {
+            return [];
+        }
+        return notifications.map(notification => ({
+            ...notification,
+            expiryDate: notification.expiryDate.toISOString(),
+            createDate: notification.createDate.toISOString(),
+
+        }));
+    } catch (e) {
+        console.log(e);
+        return handleAuthError();
+    }
+}
+
+export async function getNotificationDetails(id: string) {
+    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    if (!userData) {
+        return handleAuthError();
+    }
+    try {
+        const notification = await db.notifications.findUnique({
+            where: {
+                id
+            },
+            select: {
+                id: true,
+                createDate: true,
+                expiryDate: true,
+                title: true,
+                content: true,
+                type: true,
+                link: true,
+                linkTitle: true,
+            }
+        });
+        return notification;
+    } catch {
+        return handleAuthError();
+    }
+}
+
+export async function setNotificationAsRead({ notificationId }: { notificationId: string }) {
+    try {
+        if (!notificationId) {
+            return handleAuthError();
+        }
+        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        if (!userData) {
+            return handleAuthError();
+        }
+        if (!(await verifySession())) {
+            return handleAuthError();
+        }
+        await db.notifications.update({
+            where: { id: notificationId },
+            data: {
+                viewCount: {
+                    increment: 1,
+                }
+            }
+        });
+        return;
+    } catch {
+        return handleAuthError();
+    }
+}
+
 export async function updateServerData() {
     const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
     if (!userData) {
@@ -119,7 +210,7 @@ async function updateServerAverage(userId: string) {
 
 async function updateServerPresenceData(userId: string) {
     const presenceData = await getPresence();
-    if (presenceData && presenceData.delaysNumber && presenceData.absenceHours) {
+    if (presenceData && presenceData.delaysNumber !== undefined && presenceData.absenceHours !== undefined) {
         await db.user.update({
             where: { id: userId },
             data: {

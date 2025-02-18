@@ -44,3 +44,15 @@ model PostLikeInteraction {
   type      String   @default("upvote")
   createdAt DateTime @default(now())
 }
+
+model Notifications {
+  id         String   @id @default(uuid())
+  createDate DateTime @default(now())
+  expiryDate DateTime
+  title      String
+  content    String
+  type       String
+  viewCount  Int      @default(0)
+  link       String?
+  linkTitle  String?
+}
