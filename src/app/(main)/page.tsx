@@ -110,7 +110,7 @@ export default function Home() {
         <div className="absolute top-0 bottom-0 left-0 right-0 bg-background -z-20" />
         <DaySelector setCurrentDay={setSelectedDay} currentDay={selectedDay} />
       </div>
-      <div className={`max-w-3xl mx-auto ${agendaLoading ? 'overflow-hidden' : ''}`} {...swipeDetector}>
+      <div className={`max-w-3xl min-h-[calc(100svh-86px-204px)] mx-auto ${agendaLoading ? 'overflow-hidden' : ''}`} {...swipeDetector}>
         <div className="p-4" ref={parent}>
           <InstallPWAPrompt />
           <NotificationSection />
