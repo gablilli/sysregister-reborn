@@ -3,8 +3,9 @@ import DaySelector from "@/components/Home/DaySelector";
 import { AgendaItemType, LessonType, Notification } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { getAllNotifications, getDayAgenda, getDayLessons, setNotificationAsRead } from "./actions";
-import { BellDot, ChevronRight } from "lucide-react";
+import { BellDot, ChevronRight, Loader } from "lucide-react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useSwipeable } from 'react-swipeable'
 import Checkbox from "@/components/Checkbox";
 import Link from "next/link";
 import {
@@ -21,6 +22,16 @@ import InstallPWAPrompt from "@/components/InstallPWAPrompt";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const swipeDetector = useSwipeable({
+    onSwipedRight: () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setSelectedDay(new Date(selectedDay.setDate(selectedDay.getDate() - 1)));
+    },
+    onSwipedLeft: () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setSelectedDay(new Date(selectedDay.setDate(selectedDay.getDate() + 1)));
+    }
+  });
   const [parent] = useAutoAnimate();
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const [lessons, setLessons] = useState<LessonType[]>([]);
@@ -99,12 +110,14 @@ export default function Home() {
         <div className="absolute top-0 bottom-0 left-0 right-0 bg-background -z-20" />
         <DaySelector setCurrentDay={setSelectedDay} currentDay={selectedDay} />
       </div>
-      <div className="max-w-3xl mx-auto">
+      <div className={`max-w-3xl mx-auto ${agendaLoading ? 'overflow-hidden' : ''}`} {...swipeDetector}>
         <div className="p-4" ref={parent}>
           <InstallPWAPrompt />
           <NotificationSection />
           <LessonsPageLink lessons={lessons} day={selectedDay} />
           <p className="font-semibold text-2xl mb-3">Agenda</p>
+          {agendaLoading && (
+            <Loader className="mx-auto animate-spin mt-4" />)}
           <div className="flex gap-4 flex-col" ref={parent}>
             {!agendaLoading && agenda && agenda.length === 0 && (
               <div className="rounded-xl overflow-hidden relative opacity-50 p-4">
