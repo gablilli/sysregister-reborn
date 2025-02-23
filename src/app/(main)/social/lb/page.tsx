@@ -6,6 +6,7 @@ import { TabsContent } from "@radix-ui/react-tabs";
 import { useRouter } from "next/navigation";
 import { hasUserAcceptedSocialTerms, revokeSocialTerms } from "../actions";
 import { Button } from "@/components/ui/button";
+import NotificationSection from "@/components/NotificationSection";
 
 type LeaderboardEntryType = {
     name: string;
@@ -28,6 +29,7 @@ export default function Page() {
         <div>
             <SocialTermsDrawer />
             <div className="p-4 max-w-3xl mx-auto">
+                <NotificationSection />
                 <Tabs className="w-full" defaultValue="media">
                     <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
                         <p className="text-3xl mb-2 font-semibold">Classifiche</p>

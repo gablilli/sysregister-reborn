@@ -22,6 +22,9 @@ export async function getLeaderboard() {
     if (!hasPermission(currentUser.permissions, PERMISSIONS.VERIFIED)) {
         return;
     }
+    if (!currentUser.hasAcceptedSocialTerms) {
+        return;
+    }
     const leaderboard = await db.user.findMany({
         select: {
             name: true,

@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useDoubleTap } from 'use-double-tap';
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import NotificationSection from "@/components/NotificationSection";
 
 export type Post = {
     id: string;
@@ -65,6 +66,7 @@ export default function Page() {
         <div>
             <div>
                 <div className="p-4 max-w-3xl mx-auto">
+                    <NotificationSection />
                     <Tabs className="w-full z-10" defaultValue="new" value={currentTab} onValueChange={async (value) => {
                         setPosts([]);
                         if (value === "new") {

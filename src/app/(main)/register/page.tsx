@@ -7,10 +7,12 @@ import { GradeType, PeriodType } from "@/lib/types";
 import { Suspense, useEffect, useState } from "react";
 import MarksPageLinkLoading, { EventsPageLinkLoading } from "./skeletons";
 import { getMarksAndPeriods } from "./actions";
+import NotificationSection from "@/components/NotificationSection";
 
 export default function Page() {
   return (
     <div className="p-6 px-4 max-w-3xl mx-auto">
+      <NotificationSection />
       <Suspense fallback={<MarksPageLinkLoading />}>
         <MarksPageLink />
       </Suspense>

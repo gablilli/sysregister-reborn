@@ -5,6 +5,7 @@ import { getBacheca } from "./actions";
 import { useEffect, useState } from "react";
 import { BachecaType } from "@/lib/types";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
+import NotificationSection from "@/components/NotificationSection";
 
 type BachecaResponse = {
   read: BachecaType[];
@@ -32,16 +33,24 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="p-4 py-6 max-w-3xl mx-auto flex flex-col gap-5">
-      <InstallPWAPrompt />
-      {bachecaLoading ? (
-        <BigPageLinkSkeleton href="/files/bacheca" />) : (
-        <BigPageLink label="Bacheca" description={bacheca?.msg_new ? `Hai ${bacheca?.msg_new.length} messaggi da leggere` : `Tutto ok, niente da leggere.`} href="/files/bacheca" />)
-      }
-      <div className="opacity-30 flex flex-col gap-5">
-        <BigPageLink label="Compiti" description={`Funzionalitá presto disponibile...`} href="#" />
-        <SmallPageLink label="Didattica" description="Funzionalitá Presto disponibile..." href="#" /></div>
-    </div>
+    <>
+
+      <div className="p-4 py-6 max-w-3xl mx-auto flex flex-col">
+        <div>
+          <InstallPWAPrompt />
+          <NotificationSection />
+        </div>
+        <div className="flex flex-col gap-5">
+          {bachecaLoading ? (
+            <BigPageLinkSkeleton href="/files/bacheca" />) : (
+            <BigPageLink label="Bacheca" description={bacheca?.msg_new ? `Hai ${bacheca?.msg_new.length} messaggi da leggere` : `Tutto ok, niente da leggere.`} href="/files/bacheca" />)
+          }
+          <div className="opacity-30 flex flex-col gap-5">
+            <BigPageLink label="Compiti" description={`Funzionalitá presto disponibile...`} href="#" />
+            <SmallPageLink label="Didattica" description="Funzionalitá Presto disponibile..." href="#" /></div>
+        </div>
+      </div>
+    </>
   )
 }
 

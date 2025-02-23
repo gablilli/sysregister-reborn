@@ -1,4 +1,5 @@
 "use client";
+import NotificationSection from "@/components/NotificationSection";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -6,6 +7,7 @@ import Link from "next/link";
 export default function Page() {
     return (
         <div className="p-4 max-w-3xl mx-auto">
+            <NotificationSection />
             <div className="sticky top-0 z-10 shadow-xl pt-4 bg-background">
                 <p className="text-3xl mb-4 font-semibold">Social</p>
             </div>
