@@ -88,6 +88,7 @@ export async function getNewPosts({ feed }: { feed?: string }) {
                 author: {
                     select: {
                         name: true,
+                        permissions: true,
                     },
                 },
                 likes: {
@@ -157,6 +158,7 @@ export async function getTopPosts({ feed }: { feed?: string }) {
                 author: {
                     select: {
                         name: true,
+                        permissions: true
                     },
                 },
                 likes: {

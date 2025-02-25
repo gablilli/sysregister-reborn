@@ -14,6 +14,7 @@ import { useDoubleTap } from 'use-double-tap';
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import NotificationSection from "@/components/NotificationSection";
+import { PermsBadges } from "@/components/PermsBadges";
 
 export type Post = {
     id: string;
@@ -23,6 +24,7 @@ export type Post = {
     createdAt: Date;
     author: {
         name: string | null;
+        permissions: number;
     } | null;
     likes: {
         userId: string;
@@ -173,11 +175,15 @@ function SpotEntry({ post, tryUpdatePosts }: { post: Post, tryUpdatePosts: () =>
                             <AvatarFallback>{post.author?.name ? `${post.author.name[0].toUpperCase()}${post.author.name[1]?.toUpperCase()}` : '?'}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold">@{post.author?.name || "Anonimo"}</p>
+                            <div className="flex items-center gap-1.5">
+                                <p className="font-semibold">@{post.author?.name || "Anonimo"}</p>
+                                <PermsBadges permissions={post.author?.permissions || 0} />
+                            </div>
                             <p className="text-sm opacity-65">
                                 {formatPublishDate(post.createdAt)}
                             </p>
                         </div>
+
                     </div>
                     <div>
                         {post.canUserDeletePost && (

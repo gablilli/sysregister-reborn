@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { hasUserAcceptedSocialTerms, revokeSocialTerms } from "../actions";
 import { Button } from "@/components/ui/button";
 import NotificationSection from "@/components/NotificationSection";
+import { PermsBadges } from "@/components/PermsBadges";
 
 type LeaderboardEntryType = {
     name: string;
@@ -14,6 +15,7 @@ type LeaderboardEntryType = {
     absenceHours: number;
     delaysNumber: number;
     isRequestingUser: boolean;
+    permissions: number;
 }
 
 export default function Page() {
@@ -41,17 +43,17 @@ export default function Page() {
                     </div>
                     <TabsContent value="media" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.average - a.average).map((entry, index) => (
-                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
+                            <LeaderboardEntry permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="delays" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.delaysNumber - a.delaysNumber).map((entry, index) => (
-                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
+                            <LeaderboardEntry permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="absences" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.absenceHours - a.absenceHours).map((entry, index) => (
-                            <LeaderboardEntry key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
+                            <LeaderboardEntry permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                 </Tabs>
@@ -60,7 +62,7 @@ export default function Page() {
     )
 }
 
-function LeaderboardEntry({ rank, name, value, precision, singleLabel, label, isRequestingUser }: { rank: number, name: string, value: number, singleLabel?: string, precision?: number, label?: string, isRequestingUser?: boolean }) {
+function LeaderboardEntry({ rank, name, value, precision, singleLabel, permissions, label, isRequestingUser }: { rank: number, permissions: number, name: string, value: number, singleLabel?: string, precision?: number, label?: string, isRequestingUser?: boolean }) {
     return (
         <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
             <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
@@ -69,8 +71,8 @@ function LeaderboardEntry({ rank, name, value, precision, singleLabel, label, is
                     #{rank}
                 </div>
 
-                <div className="truncate">
-                    @{name}
+                <div className="truncate flex items-center gap-1.5">
+                    @{name} <PermsBadges permissions={permissions} />
                 </div>
             </div>
             <div className="font-semibold">
