@@ -85,7 +85,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                 <div className="absolute top-0 bottom-0 left-0 right-0 bg-secondary opacity-40 -z-10" />
             </div>
             <div className="px-4 -translate-y-1/2 flex items-center justify-between">
-                <Avatar className="outline-offset-1 ml-2 outline bg-accent outline-accent h-[100px] w-[100px]">
+                <Avatar className="outline-offset-1 ml-1 outline bg-accent outline-accent h-[100px] w-[100px]">
                     <AvatarFallback className="text-2xl">{userData?.name ? `${userData.name[0].toUpperCase()}${userData.name[1]?.toUpperCase()}` : "NA"}</AvatarFallback>
                     <AvatarImage src={`/userassets/avatars/${userData.internalId}.jpg?time=${new Date().toISOString()}`} alt={userData.name ?? "User"} />
                 </Avatar>
@@ -101,7 +101,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                 </div>
                 <span className="absolute right-0 mr-5 top-[80%] truncate text-sm"><b>{userData.likeCount}</b> like <span className="opacity-50 text-accent px-1">•</span> <b>{userData.followCount}</b> followers</span>
             </div>
-            <div className="px-4 ml-1 -translate-y-[35px] overflow-x-hidden">
+            <div className="px-4 -translate-y-[35px] overflow-x-hidden">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                         <p className="text-2xl font-semibold">
@@ -133,10 +133,10 @@ export function ProfilePage({ userId }: { userId?: string }) {
                             <div className="flex flex-col items-center">
                                 <p className="text-sm text-accent">Ritardi</p>
                                 <p className="font-semibold text-xl">#{userData.delaysRank}</p>
-                                <p className="opacity-60 text-sm">({userData.absencesHours?.toFixed(0) || 0} {" "}
-                                    {userData.absencesHours !== undefined && (
+                                <p className="opacity-60 text-sm">({userData.delays?.toFixed(0) || 0} {" "}
+                                    {userData.delays !== undefined && (
                                         <>
-                                            {userData.absencesHours === 1 ? "ritardo" : "ritardi"}
+                                            {userData.delays === 1 ? "ritardo" : "ritardi"}
                                         </>
                                     )})</p>
                             </div>
