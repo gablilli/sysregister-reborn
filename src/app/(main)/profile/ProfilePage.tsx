@@ -343,7 +343,6 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
                                 <Textarea
                                     className="border-none max-h-[200px] min-h-[100px] resize-none placeholder:text-secondary"
                                     placeholder="Inserisci una bio..."
-                                    autoFocus
                                     value={bio || ""}
                                     onInput={(e) => {
                                         e.currentTarget.style.height = "auto";
