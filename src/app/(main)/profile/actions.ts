@@ -52,6 +52,7 @@ export async function getUserData(userId?: string) {
                 average: {
                     gt: user?.average || 0,
                 },
+                hasAcceptedSocialTerms: true,
             },
         }),
         db.user.count({
@@ -59,6 +60,7 @@ export async function getUserData(userId?: string) {
                 absencesHours: {
                     gt: user?.absencesHours || 0,
                 },
+                hasAcceptedSocialTerms: true,
             },
         }),
         db.user.count({
@@ -66,6 +68,8 @@ export async function getUserData(userId?: string) {
                 delays: {
                     gt: user?.delays || 0,
                 },
+                hasAcceptedSocialTerms: true,
+
             },
         }),
     ]);
@@ -74,9 +78,9 @@ export async function getUserData(userId?: string) {
     const likeCount = postCountResult.reduce((acc, post) => acc + post.likes.length, 0);
 
     const userRanking = {
-        averageRank: averageRank,
-        absencesRank: absencesRank,
-        delaysRank: delaysRank,
+        averageRank: averageRank + 1,
+        absencesRank: absencesRank + 1,
+        delaysRank: delaysRank + 1,
         followCount: user?.followers?.length || 0,
         isFollowed: isFollowed,
     };
