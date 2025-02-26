@@ -66,10 +66,9 @@ export function ProfilePage({ userId }: { userId?: string }) {
     }
 
     if (userData.internalId === null) {
-        return (
-            <div>skibidi</div>
-        )
+        return null;
     }
+    
     return (
         <div className="max-w-3xl mx-auto">
             <div className="h-[150px] relative">
@@ -245,7 +244,7 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
         await updateBanner(banner);
     }
     return (
-        <Drawer>
+        <Drawer repositionInputs={false} disablePreventScroll={false}>
             <DrawerTrigger>
                 <div className="bg-background rounded-full overflow-hidden p-1">
                     <Button variant={"secondary"} className="rounded-full">Modifica Profilo</Button>

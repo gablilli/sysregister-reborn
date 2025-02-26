@@ -35,6 +35,7 @@ export async function getUserData(userId?: string) {
                 permissions: true,
                 bio: true,
                 followers: true,
+                hasAcceptedSocialTerms: true,
             }
         }),
         db.post.findMany({
@@ -73,10 +74,11 @@ export async function getUserData(userId?: string) {
             },
         }),
     ]);
-
+    if (!user?.hasAcceptedSocialTerms) {
+        return null;
+    }
     const isFollowed = user?.followers?.some(follow => follow.followedId === (userId || userData.internalId)) || false;
     const likeCount = postCountResult.reduce((acc, post) => acc + post.likes.length, 0);
-
     const userRanking = {
         averageRank: averageRank + 1,
         absencesRank: absencesRank + 1,
