@@ -17,7 +17,7 @@ export default function Navbar() {
     <div className="dark:bg-black z-50 bg-white fixed bottom-0 left-0 right-0 h-[80px] shadow-lg shadow-accent">
       <div className="flex items-center pt-4 justify-around">
         {/*today icon*/}
-        <Link href={"/"}>
+        <Link href={"/"} className="w-full flex items-center justify-center">
           <div
             className={`h-[28px] w-[28px] transition-all flex items-center justify-center rounded-md ${path == "/"
                 ? "border-accent bg-accent text-black"
@@ -28,7 +28,7 @@ export default function Navbar() {
           </div>
         </Link>
         {/*files icon */}
-        <Link href={"/files"}>
+        <Link href={"/files"} className="w-full flex items-center justify-center">
           {path.startsWith("/files") ? (
             <Image src={fileIconFilled} alt="file" width={30} height={30} />
           ) : (
@@ -36,7 +36,7 @@ export default function Navbar() {
           )}
         </Link>
         {/*social icon */}
-        <Link href={"/social"}>
+        <Link href={"/social"} className="w-full flex items-center justify-center">
           {path.startsWith("/social") ? (
             <Star fill="var(--primary)" className="text-primary" size={32} />
           ) : (
@@ -44,7 +44,7 @@ export default function Navbar() {
           )}
         </Link>
         {/*register icon */}
-        <Link href={"/register"}>
+        <Link href={"/register"} className="w-full flex items-center justify-center">
           {path.startsWith("/register") ? (
             <Image src={registerIconFilled} alt="file" width={25} height={29} />
           ) : (
@@ -52,8 +52,8 @@ export default function Navbar() {
           )}
         </Link>
         {/*profile icon */}
-        <Link href={"/profile"}>
-          {path.startsWith("/profile") ? (
+        <Link href={"/profile"} className="w-full flex items-center justify-center">
+          {path == "/profile" ? (
             <Image src={profileIconFilled} alt="file" width={28} height={28} />
           ) : (
             <Image src={profileIcon} alt="file" width={28} height={28} />

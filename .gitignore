@@ -35,6 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-#db
+# db
 *.db
 *.sqlite
+
+# userassets
+/public/userassets/banners/*
+/public/userassets/avatars/*

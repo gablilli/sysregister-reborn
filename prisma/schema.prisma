@@ -11,18 +11,21 @@ datasource db {
 }
 
 model User {
-  id                     String                @id
-  internalId             String?               @unique @default(uuid())
-  lastServerDataUpdate   DateTime              @default(now())
-  hasAcceptedSocialTerms Boolean               @default(false)
-  name                   String?               @unique
+  id                     String                  @id
+  internalId             String?                 @unique @default(uuid())
+  lastServerDataUpdate   DateTime                @default(now())
+  hasAcceptedSocialTerms Boolean                 @default(false)
+  name                   String?                 @unique
   school                 String?
   average                Float?
   absencesHours          Float?
   delays                 Int?
-  permissions            Int                   @default(1)
+  permissions            Int                     @default(1)
   posts                  Post[]
   likes                  PostLikeInteraction[]
+  bio                    String?
+  followers              FollowUserInteraction[] @relation(name: "followedRelation")
+  following              FollowUserInteraction[] @relation(name: "followerRelation")
 }
 
 model Post {
@@ -43,6 +46,15 @@ model PostLikeInteraction {
   userId    String
   type      String   @default("upvote")
   createdAt DateTime @default(now())
+}
+
+model FollowUserInteraction {
+  id         String   @id @default(uuid())
+  follower   User     @relation(name: "followerRelation", fields: [followerId], references: [internalId])
+  followerId String
+  followed   User     @relation(name: "followedRelation", fields: [followedId], references: [internalId])
+  followedId String
+  createdAt  DateTime @default(now())
 }
 
 model Notifications {

@@ -8,6 +8,7 @@ import { hasUserAcceptedSocialTerms, revokeSocialTerms } from "../actions";
 import { Button } from "@/components/ui/button";
 import NotificationSection from "@/components/NotificationSection";
 import { PermsBadges } from "@/components/PermsBadges";
+import Link from "next/link";
 
 type LeaderboardEntryType = {
     name: string;
@@ -16,6 +17,7 @@ type LeaderboardEntryType = {
     delaysNumber: number;
     isRequestingUser: boolean;
     permissions: number;
+    internalId: string;
 }
 
 export default function Page() {
@@ -43,17 +45,17 @@ export default function Page() {
                     </div>
                     <TabsContent value="media" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.average - a.average).map((entry, index) => (
-                            <LeaderboardEntry permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
+                            <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="delays" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.delaysNumber - a.delaysNumber).map((entry, index) => (
-                            <LeaderboardEntry permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
+                            <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="absences" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.absenceHours - a.absenceHours).map((entry, index) => (
-                            <LeaderboardEntry permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
+                            <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                 </Tabs>
@@ -62,28 +64,30 @@ export default function Page() {
     )
 }
 
-function LeaderboardEntry({ rank, name, value, precision, singleLabel, permissions, label, isRequestingUser }: { rank: number, permissions: number, name: string, value: number, singleLabel?: string, precision?: number, label?: string, isRequestingUser?: boolean }) {
+function LeaderboardEntry({ rank, name, userInternalId, value, precision, singleLabel, permissions, label, isRequestingUser }: { rank: number, userInternalId: string, permissions: number, name: string, value: number, singleLabel?: string, precision?: number, label?: string, isRequestingUser?: boolean }) {
     return (
-        <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
-            <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
-            <div className="flex items-center gap-4">
-                <div className="min-w-[40px] text-lg text-accent text-center font-semibold">
-                    #{rank}
-                </div>
+        <Link href={`/profile/${userInternalId}`}>
+            <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
+                <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
+                <div className="flex items-center gap-4">
+                    <div className="min-w-[40px] text-lg text-accent text-center font-semibold">
+                        #{rank}
+                    </div>
 
-                <div className="truncate flex items-center gap-1.5">
-                    @{name} <PermsBadges permissions={permissions} />
+                    <div className="truncate flex items-center gap-1.5">
+                        @{name} <PermsBadges permissions={permissions} />
+                    </div>
+                </div>
+                <div className="font-semibold">
+                    {value?.toFixed(precision || 0) || 0} {" "}
+                    {value !== undefined && (
+                        <>
+                            {value === 1 && singleLabel ? singleLabel : label}
+                        </>
+                    )}
                 </div>
             </div>
-            <div className="font-semibold">
-                {value?.toFixed(precision || 0) || 0} {" "}
-                {value !== undefined && (
-                    <>
-                        {value === 1 && singleLabel ? singleLabel : label}
-                    </>
-                )}
-            </div>
-        </div>
+        </Link>
     )
 }
 

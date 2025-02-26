@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { createPost, deletePost, getNewPosts, getTopPosts, togglePostLike } from "./actions";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDoubleTap } from 'use-double-tap';
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import NotificationSection from "@/components/NotificationSection";
 import { PermsBadges } from "@/components/PermsBadges";
+import Link from "next/link";
 
 export type Post = {
     id: string;
@@ -173,12 +174,20 @@ function SpotEntry({ post, tryUpdatePosts }: { post: Post, tryUpdatePosts: () =>
                     <div className="flex items-center gap-2.5">
                         <Avatar className="bg-accent h-[50px] w-[50px]">
                             <AvatarFallback>{post.author?.name ? `${post.author.name[0].toUpperCase()}${post.author.name[1]?.toUpperCase()}` : '?'}</AvatarFallback>
+                            <AvatarImage src={`/userassets/avatars/${post.authorId}.jpg`} alt={post.author?.name || "User"} />
                         </Avatar>
                         <div>
-                            <div className="flex items-center gap-1.5">
-                                <p className="font-semibold">@{post.author?.name || "Anonimo"}</p>
-                                <PermsBadges permissions={post.author?.permissions || 0} />
-                            </div>
+                            {post.authorId ? (
+                                <Link href={`/profile/${post.authorId}`} className="flex items-center gap-1.5">
+                                    <p className="font-semibold">@{post.author?.name || "Anonimo"}</p>
+                                    <PermsBadges permissions={post.author?.permissions || 0} />
+                                </Link>
+                            ) : (
+                                <div className="flex items-center gap-1.5">
+                                    <p className="font-semibold">@{post.author?.name || "Anonimo"}</p>
+                                    <PermsBadges permissions={post.author?.permissions || 0} />
+                                </div>
+                            )}
                             <p className="text-sm opacity-65">
                                 {formatPublishDate(post.createdAt)}
                             </p>
