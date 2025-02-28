@@ -20,7 +20,7 @@ export default function Line({
           }`}
           style={{ width: `${(isNaN(value) ? 0 : value) * 10}%` }}
         >
-          <span className="font-semibold mr-1.5 ml-1.5">
+          <span className="font-semibold ph-censor-text mr-1.5 ml-1.5">
             {isNaN(value) ? 0 : value}
             <span className="text-xs font-normal">/10</span>
           </span>

@@ -98,7 +98,7 @@ export default function Page() {
             <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${periods.length + 1}, 1fr)` }}>
               <TabsTrigger value={"all"}>Valutazioni</TabsTrigger>
               {periods.map((period, index) => (
-                <TabsTrigger key={index} value={period.periodDesc}>{period.periodDesc}</TabsTrigger>
+                <TabsTrigger key={index} value={period.periodDesc} className="ph-censor-text">{period.periodDesc}</TabsTrigger>
               ))}
             </TabsList>
           </div>
@@ -106,7 +106,7 @@ export default function Page() {
             <div className="flex flex-col gap-8">
               {marks.flat().filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length !== 0 && (
                 <div>
-                  <p className="font-semibold text-2xl mb-1.5">
+                  <p className="font-semibold ph-censor-text text-2xl mb-1.5">
                     Nuovi voti ({marks.flat().filter(mark => !(JSON.parse(window.localStorage.getItem("read_marks_ids") || "[]")).includes(mark.evtId)).length})
                   </p>
                   <div className="flex flex-col gap-3">
@@ -193,8 +193,8 @@ function SubjectCard({ subject }: { subject: Subject }) {
         {subject.marks && <Gauge value={parseFloat(getGradesAverage(subject.marks).toFixed(3))} size={80} />}
       </div>
       <div className="flex-1">
-        <p className="text-MD font-semibold">{subject.name.split('-')[0]}</p>
-        <p className="opacity-55 text-text text-sm">
+        <p className="text-MD font-semibold ph-censor-text">{subject.name.split('-')[0]}</p>
+        <p className="opacity-55 text-text text-sm ph-censor-text">
           {subject.marks && getGradesAverage(subject.marks) < 6 ? (
             <>
               {parseFloat(calculateNeededValue(getGradesAverage(subject.marks), subject.marks.length)) > 10 ? (
@@ -265,22 +265,22 @@ function MarkEntry({ mark }: { mark: GradeType }) {
                 : mark.decimalValue < 6.0
                   ? "bg-yellow-600"
                   : "bg-green-600"
-              } w-14 h-14 text-xl flex rounded-full font-semibold justify-center items-center text-white`}
+              } w-14 h-14 text-xl ph-censor-text flex rounded-full font-semibold justify-center items-center text-white`}
           >
             {loading ? <Loader className="animate-spin" /> : mark.displayValue}
           </span>
         </div>
         <div className="">
-          <p className="text-sm">{mark.periodDesc}</p>
-          <p className="font-semibold">{mark.subjectDesc}</p>
-          <p className="opacity-60 text-sm">{mark.componentDesc ? mark.componentDesc : "Voto di prova"} • {mark.evtDate}</p>
+          <p className="text-sm ph-censor-text">{mark.periodDesc}</p>
+          <p className="font-semibold ph-censor-text">{mark.subjectDesc}</p>
+          <p className="opacity-60 text-sm ph-censor-text">{mark.componentDesc ? mark.componentDesc : "Voto di prova"} • {mark.evtDate}</p>
         </div>
       </div>
       {notes != null && (
         <div className="flex items-center mt-3 relative p-4 rounded-lg overflow-hidden">
           <div className="bg-secondary -z-10 opacity-30 absolute top-0 bottom-0 left-0 right-0" />
-          <span className="whitespace-pre-wrap">{notes}</span>
-          {!notes && <span className="italic font-semibold">Il docente non ha inserito note per la famiglia.</span>}
+          <span className="whitespace-pre-wrap ph-censor-text">{notes}</span>
+          {!notes && <span className="italic font-semibold ph-censor-text">Il docente non ha inserito note per la famiglia.</span>}
         </div>
       )}
     </div>

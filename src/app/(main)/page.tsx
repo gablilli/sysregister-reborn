@@ -205,9 +205,9 @@ function AgendaItem({
       />
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-text font-semibold">{author}</p>
+          <p className="text-text font-semibold ph-censor-text">{author}</p>
           <div className="text-accent flex flex-col">
-            <span className="opacity-50 text-sm">{time}</span>
+            <span className="opacity-50 text-sm ph-censor-text">{time}</span>
           </div>
         </div>
         <div onClick={() => toggleCompletedAgenda()}>
@@ -216,7 +216,7 @@ function AgendaItem({
       </div>
       <div className="relative overflow-hidden p-2 rounded-md mt-3">
         <div className="absolute bg-accent -z-10 opacity-35 top-0 left-0 right-0 bottom-0" />
-        <span style={{ whiteSpace: "pre-wrap" }}>{content}</span>
+        <span style={{ whiteSpace: "pre-wrap" }} className="ph-censor-text">{content}</span>
       </div>
     </div>
   );
@@ -262,7 +262,7 @@ function LessonsPageLink({
             ? "di oggi"
             : `del giorno ${day.getDate()} ${monthNames[day.getMonth()]}`}
         </p>
-        <p className="opacity-60 text-primary text-sm">
+        <p className="opacity-60 text-primary ph-censor-text text-sm">
           {lessons && lessons.length} firme da professori
         </p>
       </div>

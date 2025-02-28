@@ -88,9 +88,9 @@ function BachecaEntry({ bachecaItem, setBacheca, bacheca }: { bachecaItem: Bache
         <Drawer disablePreventScroll={false}>
             <DrawerTrigger className="w-full focus:outline-none">
                 <div className="border-t-[1px] overflow-hidden flex flex-col items-start text-left w-full py-4 pt-5 border-red-950">
-                    <p className="text-lg font-semibold leading-6">{bachecaItem.titolo}</p>
-                    <p className="text-sm mt-0.5 text-secondary font-semibold">{bachecaItem.tipo_com_desc} • {bachecaItem.evento_data}</p>
-                    <p className="font-normal text-sm opacity-40 mt-1">
+                    <p className="text-lg font-semibold leading-6 ph-censor-text">{bachecaItem.titolo}</p>
+                    <p className="text-sm mt-0.5 text-secondary font-semibold ph-censor-text">{bachecaItem.tipo_com_desc} • {bachecaItem.evento_data}</p>
+                    <p className="font-normal text-sm opacity-40 mt-1 ph-censor-text">
                         {bachecaItem?.testo?.length > 200
                             ? bachecaItem.testo.slice(0, 200) + '...'
                             : bachecaItem.testo}
@@ -98,10 +98,10 @@ function BachecaEntry({ bachecaItem, setBacheca, bacheca }: { bachecaItem: Bache
                 </div>
             </DrawerTrigger>
             <DrawerContent aria-describedby="" className="p-4 pb-12 max-w-3xl mx-auto">
-                <DrawerTitle className="text-lg font-semibold leading-6">{bachecaItem.titolo}
+                <DrawerTitle className="text-lg font-semibold leading-6 ph-censor-text">{bachecaItem.titolo}
                 </DrawerTitle>
-                <p className="text-sm mt-0.5 text-secondary font-semibold">{bachecaItem.tipo_com_desc} • {bachecaItem.evento_data}</p>
-                <p className="font-normal text-sm opacity-65 mt-6 whitespace-pre-line">
+                <p className="text-sm mt-0.5 text-secondary font-semibold ph-censor-text">{bachecaItem.tipo_com_desc} • {bachecaItem.evento_data}</p>
+                <p className="font-normal text-sm opacity-65 mt-6 whitespace-pre-line ph-censor-text">
                     {bachecaItem.testo.split(' ').map((word, index) => {
                         const urlPattern = /(https?:\/\/[^\s]+)/g;
                         return urlPattern.test(word) ? (

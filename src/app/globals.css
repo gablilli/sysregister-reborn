@@ -60,3 +60,8 @@ body {
     --chart-5: 340 75% 55%;
   }
 }
+
+/* use this to visualize what will be censored in the final posthog capture */
+/* .ph-censor-text, .ph-no-capture {
+  background-color: #FFFFFF !important;
+} */

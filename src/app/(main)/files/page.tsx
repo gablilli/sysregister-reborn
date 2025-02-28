@@ -63,8 +63,8 @@ function BigPageLink({ label, description, href }: { label: string, description:
       <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
       <div className="flex flex-col justify-start">
         <div className="flex  min-h-[130px] flex-col justify-between">
-          <p className="text-xl font-semibold">{label}</p>
-          <p className="text-lg font-semibold mt-4">{description}</p>
+          <p className="text-xl font-semibold ph-censor-text">{label}</p>
+          <p className="text-lg font-semibold mt-4 ph-censor-text">{description}</p>
         </div>
       </div>
       <ChevronRight className="text-secondary" />
@@ -99,8 +99,8 @@ function SmallPageLink({ label, description, href }: { label: string, descriptio
       <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
       <div className="flex flex-col justify-start">
         <div className="flex flex-col justify-between">
-          <p className="text-lg font-semibold">{label}</p>
-          <p className="opacity-60 text-sm">{description}</p>
+          <p className="text-lg font-semibold ph-censor-text">{label}</p>
+          <p className="opacity-60 text-sm ph-censor-text">{description}</p>
         </div>
       </div>
       <ChevronRight className="text-secondary" />

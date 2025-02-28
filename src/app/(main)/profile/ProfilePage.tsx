@@ -280,7 +280,7 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
                                 <div className="relative">
                                     <div className="px-2 -translate-y-1/2 flex items-center justify-between">
                                         <Avatar className="outline-offset-1 ml-2 outline bg-accent outline-accent h-[100px] w-[100px]">
-                                            <AvatarFallback className="text-2xl">SY</AvatarFallback>
+                                            <AvatarFallback className="text-2xl">{user?.name ? `${user.name[0].toUpperCase()}${user.name[1]?.toUpperCase()}` : "NA"}</AvatarFallback>
                                             <AvatarImage key={avatar} src={avatar} alt={user.name ?? "User"} />
                                         </Avatar>
                                     </div>

@@ -32,10 +32,10 @@ export default function Gauge({
         style={{ width: size, height: size, borderWidth: borderSize }}
       ></div>
       <div className="flex flex-col items-center">
-        <span className="font-semibold" style={{ fontSize }}>
+        <span className="font-semibold ph-censor-text" style={{ fontSize }}>
           {isNaN(value) ? 0 : value === 0 ? "-" : value}
           <span
-            className="text-sm font-normal"
+            className="text-sm font-normal "
             style={{ fontSize: fontSize * 0.4 }}
           >
             /10
