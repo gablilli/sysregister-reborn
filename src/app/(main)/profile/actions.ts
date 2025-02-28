@@ -47,6 +47,9 @@ export async function getUserData(userId?: string) {
             }
         })
     ]);
+    if (!user?.hasAcceptedSocialTerms) {
+        return null;
+    }
     const [averageRank, absencesRank, delaysRank] = await Promise.all([
         db.user.count({
             where: {
@@ -74,9 +77,6 @@ export async function getUserData(userId?: string) {
             },
         }),
     ]);
-    if (!user?.hasAcceptedSocialTerms) {
-        return null;
-    }
     const isFollowed = user?.followers?.some(follow => follow.followedId === (userId || userData.internalId)) || false;
     const likeCount = postCountResult.reduce((acc, post) => acc + post.likes.length, 0);
     const userRanking = {

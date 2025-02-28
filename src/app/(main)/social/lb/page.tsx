@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getLeaderboard } from "./actions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
@@ -65,8 +65,21 @@ export default function Page() {
 }
 
 function LeaderboardEntry({ rank, name, userInternalId, value, precision, singleLabel, permissions, label, isRequestingUser }: { rank: number, userInternalId: string, permissions: number, name: string, value: number, singleLabel?: string, precision?: number, label?: string, isRequestingUser?: boolean }) {
+    const entry = useRef<HTMLAnchorElement>(null);
+    useEffect(() => {
+        if (entry.current && isRequestingUser) {
+            const element = entry.current;
+            const elementRect = element.getBoundingClientRect();
+            const absoluteElementTop = elementRect.top + window.pageYOffset;
+            const middle = absoluteElementTop - (window.innerHeight / 2);
+            window.scrollTo({
+                top: middle,
+                behavior: "smooth"
+            });
+        }
+    });
     return (
-        <Link href={`/profile/${userInternalId}`}>
+        <Link ref={entry} href={`/profile/${userInternalId}`}>
             <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
                 <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
                 <div className="flex items-center gap-4">
