@@ -73,10 +73,10 @@ export async function getUserData(userId?: string) {
                     gt: user?.delays || 0,
                 },
                 hasAcceptedSocialTerms: true,
-
             },
         }),
     ]);
+
     const isFollowed = user?.followers?.some(follow => follow.followedId === (userId || userData.internalId)) || false;
     const likeCount = postCountResult.reduce((acc, post) => acc + post.likes.length, 0);
     const userRanking = {

@@ -35,6 +35,7 @@ export async function getLeaderboard() {
             id: true,
             permissions: true,
             internalId: true,
+            followers: true
         }
     }).then(users => users.filter(user => user.average !== null && user.hasAcceptedSocialTerms && user.name !== null));
     return leaderboard.map(user => ({
@@ -44,6 +45,7 @@ export async function getLeaderboard() {
         delaysNumber: user.delays,
         absenceHours: user.absencesHours,
         permissions: user.permissions,
-        internalId: user.internalId
+        internalId: user.internalId,
+        followers: user.followers.length
     }));
 }

@@ -15,6 +15,7 @@ type LeaderboardEntryType = {
     average: number;
     absenceHours: number;
     delaysNumber: number;
+    followers: number;
     isRequestingUser: boolean;
     permissions: number;
     internalId: string;
@@ -37,10 +38,11 @@ export default function Page() {
                 <Tabs className="w-full" defaultValue="media">
                     <div className="sticky top-0 z-10 shadow-xl pb-2 pt-4 bg-background">
                         <p className="text-3xl mb-2 font-semibold">Classifiche</p>
-                        <TabsList className="grid mb-2 w-full grid-cols-3">
+                        <TabsList className="grid mb-2 w-full grid-cols-4">
                             <TabsTrigger value="media">Media</TabsTrigger>
                             <TabsTrigger value="delays">Ritardi</TabsTrigger>
                             <TabsTrigger value="absences">Assenze</TabsTrigger>
+                            <TabsTrigger value="followers">Follower</TabsTrigger>
                         </TabsList>
                     </div>
                     <TabsContent value="media" className="gap-2 flex flex-col">
@@ -56,6 +58,11 @@ export default function Page() {
                     <TabsContent value="absences" className="gap-2 flex flex-col">
                         {leaderboard?.sort((a, b) => b.absenceHours - a.absenceHours).map((entry, index) => (
                             <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
+                        ))}
+                    </TabsContent>
+                    <TabsContent value="followers" className="gap-2 flex flex-col">
+                        {leaderboard?.sort((a, b) => b.followers - a.followers).map((entry, index) => (
+                            <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="followers" value={entry.followers} singleLabel="follower" isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                 </Tabs>
