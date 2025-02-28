@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import AuthIcon from "@/assets/icons/auth.svg";
 import Button from "@/components/Button";
 import { Input, InputLabel } from "@/components/Input";

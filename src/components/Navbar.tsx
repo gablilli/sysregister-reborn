@@ -8,7 +8,7 @@ import registerIcon from "@/assets/icons/register.svg";
 import registerIconFilled from "@/assets/icons/registerFilled.svg";
 import profileIcon from "@/assets/icons/profile.svg";
 import profileIconFilled from "@/assets/icons/profileFilled.svg";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import { Star } from "lucide-react";
 
 export default function Navbar() {
@@ -30,9 +30,9 @@ export default function Navbar() {
         {/*files icon */}
         <Link href={"/files"} className="w-full flex items-center justify-center">
           {path.startsWith("/files") ? (
-            <Image src={fileIconFilled} alt="file" width={30} height={30} />
+            <Image src={fileIconFilled} alt="file" className="w-auto h-auto" width={30} height={30} />
           ) : (
-            <Image src={fileIcon} alt="file" width={30} height={30} />
+            <Image src={fileIcon} alt="file" className="w-auto h-auto" width={30} height={30} />
           )}
         </Link>
         {/*social icon */}
@@ -46,17 +46,17 @@ export default function Navbar() {
         {/*register icon */}
         <Link href={"/register"} className="w-full flex items-center justify-center">
           {path.startsWith("/register") ? (
-            <Image src={registerIconFilled} alt="file" width={25} height={29} />
+            <Image src={registerIconFilled} alt="file" className="w-auto h-auto" width={25} height={29} />
           ) : (
-            <Image src={registerIcon} alt="file" width={25} height={29} />
+            <Image src={registerIcon} alt="file" className="w-auto h-auto" width={25} height={29} />
           )}
         </Link>
         {/*profile icon */}
         <Link href={"/profile"} className="w-full flex items-center justify-center">
           {path == "/profile" ? (
-            <Image src={profileIconFilled} alt="file" width={28} height={28} />
+            <Image src={profileIconFilled} alt="file" className="w-auto h-auto" width={28} height={28} />
           ) : (
-            <Image src={profileIcon} alt="file" width={28} height={28} />
+            <Image src={profileIcon} alt="file" className="w-auto h-auto" width={28} height={28} />
           )}
         </Link>
       </div>

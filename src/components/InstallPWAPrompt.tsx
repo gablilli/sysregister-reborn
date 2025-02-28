@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button";
 import addToHomeImage from "@/assets/addToHome.jpg";
-import Image from "next/image";
+import Image from "next/legacy/image";
 
 type BeforeInstallPromptEvent = Event & {
     prompt: () => void;

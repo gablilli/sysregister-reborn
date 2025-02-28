@@ -316,5 +316,5 @@ function SpotPostDrawerContent({ tryUpdatePosts }: { tryUpdatePosts: () => Promi
                 </Button>
             </DrawerFooter>
         </div>
-    )
+    );
 }

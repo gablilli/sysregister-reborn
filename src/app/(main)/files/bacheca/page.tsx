@@ -97,7 +97,7 @@ function BachecaEntry({ bachecaItem, setBacheca, bacheca }: { bachecaItem: Bache
                     </p>
                 </div>
             </DrawerTrigger>
-            <DrawerContent className="p-4 pb-12 max-w-3xl mx-auto">
+            <DrawerContent aria-describedby="" className="p-4 pb-12 max-w-3xl mx-auto">
                 <DrawerTitle className="text-lg font-semibold leading-6">{bachecaItem.titolo}
                 </DrawerTitle>
                 <p className="text-sm mt-0.5 text-secondary font-semibold">{bachecaItem.tipo_com_desc} • {bachecaItem.evento_data}</p>
@@ -135,5 +135,5 @@ function BachecaEntry({ bachecaItem, setBacheca, bacheca }: { bachecaItem: Bache
 
             </DrawerContent>
         </Drawer>
-    )
+    );
 }

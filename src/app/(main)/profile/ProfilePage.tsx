@@ -7,8 +7,10 @@ import { followUser, getUserData, unfollowUser, updateAvatar, updateBanner, upda
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTrigger } from "@/components/ui/drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { PermsBadges } from "@/components/PermsBadges";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import { usePathname } from "next/navigation";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import posthog from "posthog-js";
 
 type InternalUserData = {
     internalId: string | null;
@@ -33,7 +35,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
     const [userData, setUserData] = useState<InternalUserData | null>(null);
 
     const fetchUserData = useCallback(async () => {
-        const user = await getUserData(userId) || null;
+        const user = (await getUserData(userId)) || null;
         if (user) {
             setUserData({
                 internalId: user.internalId ?? null,
@@ -68,7 +70,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
     if (userData.internalId === null) {
         return null;
     }
-    
+
     return (
         <div className="max-w-3xl mx-auto">
             <div className="h-[150px] relative">
@@ -77,6 +79,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                     layout="fill"
                     objectFit="cover"
                     alt="banner"
+                    priority
                     onError={(e) => {
                         e.currentTarget.style.display = 'none';
                     }}
@@ -245,12 +248,13 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
     }
     return (
         <Drawer repositionInputs={false} disablePreventScroll={false}>
-            <DrawerTrigger>
+            <DrawerTrigger asChild>
                 <div className="bg-background rounded-full overflow-hidden p-1">
                     <Button variant={"secondary"} className="rounded-full">Modifica Profilo</Button>
                 </div>
             </DrawerTrigger>
-            <DrawerContent>
+            <DrawerContent aria-describedby="">
+                <DialogTitle className="hidden">Cassetto di modifica del profilo</DialogTitle>
                 <div className="max-w-3xl mx-auto w-full">
                     <DrawerHeader className="pt-0">
                         <p className="text-xl font-semibold text-center">Modifica il tuo profilo</p>
@@ -354,23 +358,28 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
                     </div>
                     <DrawerFooter className="mb-3 mt-4">
                         <Button onClick={async () => {
-                            setLoading(true);
-                            if (user.bio !== bio) {
-                                await tryUpdateBio();
+                            try {
+                                setLoading(true);
+                                if (user.bio !== bio) {
+                                    await tryUpdateBio();
+                                }
+                                if (!avatar.startsWith(`/userassets/avatars/${user.internalId}.jpg`)) {
+                                    await tryUpdateAvatar();
+                                }
+                                if (!banner.startsWith(`/userassets/banners/${user.internalId}.jpg`)) {
+                                    await tryUpdateBanner();
+                                }
+                                await updateProfile();
+                                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                                setLoading(false);
+                            } catch (e) {
+                                posthog.captureException(e);
+                                setLoading(false);
                             }
-                            if (!avatar.startsWith(`/userassets/avatars/${user.internalId}.jpg`)) {
-                                await tryUpdateAvatar();
-                            }
-                            if (!banner.startsWith(`/userassets/banners/${user.internalId}.jpg`)) {
-                                await tryUpdateBanner();
-                            }
-                            await updateProfile();
-                            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-                            setLoading(false);
                         }}>
                             {loading ? <Loader className="animate-spin" /> : "Salva"}
                         </Button>
-                        <DrawerClose>
+                        <DrawerClose asChild>
                             <Button variant={"ghost"} className="w-full">
                                 Chiudi
                             </Button>
