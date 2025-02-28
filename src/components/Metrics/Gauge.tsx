@@ -12,7 +12,7 @@ export default function Gauge({
 
   return (
     <div
-      className="rounded-full flex items-center justify-center relative overflow-hidden shadow-md"
+      className="rounded-full flex ph-no-capture items-center justify-center relative overflow-hidden shadow-md"
       style={{ width: size, height: size }}
     >
       <div
@@ -20,15 +20,14 @@ export default function Gauge({
         style={{ width: size, height: size, borderWidth: borderSize }}
       ></div>
       <div
-        className={`rounded-full absolute top-0 bottom-0 left-0 right-0 ${
-          isNaN(value) || value === 0
+        className={`rounded-full absolute top-0 bottom-0 left-0 right-0 ${isNaN(value) || value === 0
             ? "border-gray-600"
             : value <= 5.5
-            ? "border-red-600"
-            : value < 6.0
-            ? "border-yellow-600"
-            : "border-green-600"
-        }`}
+              ? "border-red-600"
+              : value < 6.0
+                ? "border-yellow-600"
+                : "border-green-600"
+          }`}
         style={{ width: size, height: size, borderWidth: borderSize }}
       ></div>
       <div className="flex flex-col items-center">

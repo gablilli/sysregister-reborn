@@ -155,7 +155,7 @@ export default function Page() {
             <TabsContent ref={parent} key={index} value={period.periodDesc} className="flex flex-col gap-2 mt-0">
                 <div className="relative flex flex-col gap-2 items-center justify-center overflow-hidden p-4 pb-6 rounded-xl mb-4">
                 <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
-                <p className="text-lg font-semibold">Media del {periods[index].periodDesc}</p>
+                <p className="text-lg font-semibold ph-censor-text">Media del {periods[index].periodDesc}</p>
                 <Gauge value={parseFloat(getGradesAverage(marks.slice().reverse()[index]).toFixed(3))} size={120} />
                 </div>
               {subjects[index].filter(subject => subject.marks && getGradesAverage(subject.marks) < 6).length !== 0 && (
@@ -256,7 +256,7 @@ function MarkEntry({ mark }: { mark: GradeType }) {
     }}>
       <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
       <div className="flex items-center gap-4">
-        <div>
+        <div className="ph-no-capture rounded-full">
           <span
             className={` ${mark.color === "blue"
               ? "bg-blue-900"

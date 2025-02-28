@@ -62,6 +62,11 @@ body {
 }
 
 /* use this to visualize what will be censored in the final posthog capture */
-/* .ph-censor-text, .ph-no-capture {
+/* .ph-no-capture {
   background-color: #FFFFFF !important;
+}
+
+.ph-censor-text {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
 } */

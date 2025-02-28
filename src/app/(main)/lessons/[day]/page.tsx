@@ -50,7 +50,7 @@ const Page = ({ params }: { params: { day: string }; }) => {
     <div className="p-4">
       <Suspense fallback={<div>Caricamento...</div>} >
         <div className="max-w-3xl mx-auto">
-          <p className="text-2xl font-semibold mb-3 mt-3">Lezioni del {formattedDate}</p>
+          <p className="text-2xl font-semibold mb-3 mt-3 ph-censor-text">Lezioni del {formattedDate}</p>
           <div>
             {lessons && lessons.map((lesson, index) => (
               <div key={index}>
@@ -117,15 +117,15 @@ function LessonItem({
       />
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-text font-semibold">{subject.split("-")[0]}</p>
+          <p className="text-text font-semibold ph-censor-text">{subject.split("-")[0]}</p>
           <div className="text-accent flex flex-col">
-            <span className="opacity-70 text-sm">{(type == "first" || type == "single") && `${time}° ora •`} {teachers} • {attivita}</span>
+            <span className="opacity-70 text-sm ph-censor-text">{(type == "first" || type == "single") && `${time}° ora •`} {teachers} • {attivita}</span>
           </div>
         </div>
       </div>
       {content && (<div className="relative overflow-hidden p-2 rounded-md mt-3">
         <div className="absolute bg-accent -z-10 opacity-35 top-0 left-0 right-0 bottom-0" />
-        <span style={{ whiteSpace: "pre-wrap" }}>{content}</span>
+        <span className="ph-censor-text" style={{ whiteSpace: "pre-wrap" }}>{content}</span>
       </div>)}
     </div>
   );

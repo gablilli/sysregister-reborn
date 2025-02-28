@@ -6,8 +6,8 @@ export default function Line({
   value: number;
 }) {
   return (
-    <div className="flex items-start overflow-hidden flex-col">
-      <p className="font-semibold mb-0.5">{label}</p>
+    <div className="flex items-start overflow-hidden flex-col ph-no-capture">
+      <p className="font-semibold mb-0.5 ph-censor-text">{label}</p>
       <div className="relative w-full rounded-sm overflow-hidden">
         <div className="absolute top-0 bottom-0 right-0 left-0 -z-10 bg-secondary opacity-30"/>
         <div

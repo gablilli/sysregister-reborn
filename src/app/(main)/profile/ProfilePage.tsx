@@ -73,7 +73,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
 
     return (
         <div className="max-w-3xl mx-auto">
-            <div className="h-[150px] relative">
+            <div className="h-[150px] relative ph-no-capture">
                 <Image
                     src={`/userassets/banners/${userData.internalId}.jpg?time=${new Date().toISOString()}`}
                     layout="fill"
@@ -87,7 +87,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                 <div className="absolute top-0 bottom-0 left-0 right-0 bg-secondary opacity-40 -z-10" />
             </div>
             <div className="px-4 -translate-y-1/2 flex items-center justify-between">
-                <Avatar className="outline-offset-1 ml-1 outline bg-accent outline-accent h-[100px] w-[100px]">
+                <Avatar className="outline-offset-1 ph-no-capture ml-1 outline bg-accent outline-accent h-[100px] w-[100px]">
                     <AvatarFallback className="text-2xl">{userData?.name ? `${userData.name[0].toUpperCase()}${userData.name[1]?.toUpperCase()}` : "NA"}</AvatarFallback>
                     <AvatarImage src={`/userassets/avatars/${userData.internalId}.jpg?time=${new Date().toISOString()}`} alt={userData.name ?? "User"} />
                 </Avatar>
@@ -101,21 +101,21 @@ export function ProfilePage({ userId }: { userId?: string }) {
               <Button variant={"secondary"} className="rounded-full"><Cog /></Button>
             </div> */}
                 </div>
-                <span className="absolute right-0 mr-5 top-[80%] truncate text-sm"><b>{userData.likeCount}</b> like <span className="opacity-50 text-accent px-1">•</span> <b>{userData.followCount}</b> followers</span>
+                <span className="absolute right-0 mr-5 top-[80%] truncate text-sm ph-censor-text"><b>{userData.likeCount}</b> like <span className="opacity-50 text-accent px-1">•</span> <b>{userData.followCount}</b> followers</span>
             </div>
             <div className="px-4 -translate-y-[35px] overflow-x-hidden">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                        <p className="text-2xl font-semibold">
+                        <p className="text-2xl font-semibold ph-censor-text">
                             @{userData.name}
                         </p>
                         <PermsBadges permissions={userData.permissions} />
                     </div>
-                    <p className="text-base opacity-50 max-w-[70%] whitespace-pre-line">{userData.school}</p>
+                    <p className="text-base opacity-50 max-w-[70%] whitespace-pre-line ph-censor-text">{userData.school}</p>
                     <div className="mt-4 relative rounded-lg overflow-hidden whitespace-pre-line p-2 px-3">
                         <div className="absolute top-0 bottom-0 left-0 right-0 bg-secondary opacity-40 -z-10" />
                         <p className="font-semibold text-sm">Bio</p>
-                        <p className="whitespace-pre-line opacity-80">
+                        <p className="whitespace-pre-line opacity-80 ph-censor-text">
                             {userData.bio ? userData.bio : <span className="italic opacity-50 font-semibold">{path === "/profile" ? (
                                 "Non hai ancora impostato una bio."
                             ) : (
@@ -126,7 +126,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                     <div className="mt-4 relative rounded-lg overflow-hidden whitespace-pre-line p-2 px-3">
                         <div className="absolute top-0 bottom-0 left-0 right-0 bg-secondary opacity-40 -z-10" />
                         <p className="font-semibold text-sm">Classifiche</p>
-                        <div className="grid grid-cols-3 my-4 grid-rows-1">
+                        <div className="grid grid-cols-3 my-4 grid-rows-1 ph-no-capture">
                             <div className="flex flex-col items-center">
                                 <p className="text-sm text-accent">Media</p>
                                 <p className="font-semibold text-xl">#{userData.averageRank}</p>
@@ -262,7 +262,7 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
                     <div className="px-4 max-h-[70svh] overflow-y-auto   flex flex-col gap-12">
                         <div>
                             <p className="font-semibold mb-2">Avatar & Banner</p>
-                            <div className="px-0 mx-auto overflow-hidden">
+                            <div className="px-0 mx-auto overflow-hidden ph-no-capture">
                                 <div className="h-[150px] relative rounded-t-lg overflow-hidden">
                                     <Image
                                         key={banner}
