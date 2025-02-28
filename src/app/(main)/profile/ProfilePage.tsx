@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import posthog from "posthog-js";
 
-type InternalUserData = {
+export type InternalUserData = {
     internalId: string | null;
     lastServerDataUpdate: Date;
     name: string | null;
@@ -26,6 +26,7 @@ type InternalUserData = {
     averageRank: number | null;
     absencesRank: number | null;
     delaysRank: number | null;
+    followersRank: number | null;
     followCount: number | null;
     isFollowed: boolean | null;
 };
@@ -51,6 +52,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                 averageRank: user.averageRank ?? null,
                 absencesRank: user.absencesRank ?? null,
                 delaysRank: user.delaysRank ?? null,
+                followersRank: user.followersRank ?? null,
                 followCount: user.followCount ?? null,
                 isFollowed: user.isFollowed ?? false,
             });
@@ -126,7 +128,7 @@ export function ProfilePage({ userId }: { userId?: string }) {
                     <div className="mt-4 relative rounded-lg overflow-hidden whitespace-pre-line p-2 px-3">
                         <div className="absolute top-0 bottom-0 left-0 right-0 bg-secondary opacity-40 -z-10" />
                         <p className="font-semibold text-sm">Classifiche</p>
-                        <div className="grid grid-cols-3 my-4 grid-rows-1 ph-no-capture">
+                        <div className="grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 gap-8 text-center my-4  ph-no-capture">
                             <div className="flex flex-col items-center">
                                 <p className="text-sm text-accent">Media</p>
                                 <p className="font-semibold text-xl">#{userData.averageRank}</p>
@@ -149,6 +151,16 @@ export function ProfilePage({ userId }: { userId?: string }) {
                                     {userData.absencesHours !== undefined && (
                                         <>
                                             {userData.absencesHours === 1 ? "ora" : "ore"}
+                                        </>
+                                    )})</p>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <p className="text-sm text-accent">Followers</p>
+                                <p className="font-semibold text-xl">#{userData.followersRank}</p>
+                                <p className="opacity-60 text-sm">({userData.followCount?.toFixed(0) || 0} {" "}
+                                    {userData.followCount !== undefined && (
+                                        <>
+                                            {userData.followCount === 1 ? "follower" : "followers"}
                                         </>
                                     )})</p>
                             </div>

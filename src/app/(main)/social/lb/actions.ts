@@ -32,6 +32,7 @@ export async function getLeaderboard() {
             delays: true,
             absencesHours: true,
             hasAcceptedSocialTerms: true,
+            lastServerDataUpdate: true,
             id: true,
             permissions: true,
             internalId: true,
@@ -46,6 +47,7 @@ export async function getLeaderboard() {
         absenceHours: user.absencesHours,
         permissions: user.permissions,
         internalId: user.internalId,
-        followers: user.followers.length
+        followers: user.followers.length,
+        lastServerDataUpdate: user.lastServerDataUpdate 
     }));
 }

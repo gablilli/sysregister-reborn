@@ -10,7 +10,7 @@ import NotificationSection from "@/components/NotificationSection";
 import { PermsBadges } from "@/components/PermsBadges";
 import Link from "next/link";
 
-type LeaderboardEntryType = {
+export type LeaderboardEntryType = {
     name: string;
     average: number;
     absenceHours: number;
@@ -19,6 +19,7 @@ type LeaderboardEntryType = {
     isRequestingUser: boolean;
     permissions: number;
     internalId: string;
+    lastServerDataUpdate: Date;
 }
 
 export default function Page() {
@@ -46,22 +47,42 @@ export default function Page() {
                         </TabsList>
                     </div>
                     <TabsContent value="media" className="gap-2 flex flex-col">
-                        {leaderboard?.sort((a, b) => b.average - a.average).map((entry, index) => (
+                        {leaderboard?.sort((a, b) => {
+                            if (b.average === a.average) {
+                                return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+                            }
+                            return b.average - a.average;
+                        }).map((entry, index) => (
                             <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} precision={3} value={entry.average} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="delays" className="gap-2 flex flex-col">
-                        {leaderboard?.sort((a, b) => b.delaysNumber - a.delaysNumber).map((entry, index) => (
+                        {leaderboard?.sort((a, b) => {
+                            if (b.delaysNumber === a.delaysNumber) {
+                                return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+                            }
+                            return b.delaysNumber - a.delaysNumber;
+                        }).map((entry, index) => (
                             <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} singleLabel="ritardo" label="ritardi" value={entry.delaysNumber} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="absences" className="gap-2 flex flex-col">
-                        {leaderboard?.sort((a, b) => b.absenceHours - a.absenceHours).map((entry, index) => (
+                        {leaderboard?.sort((a, b) => {
+                            if (b.absenceHours === a.absenceHours) {
+                                return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+                            }
+                            return b.absenceHours - a.absenceHours;
+                        }).map((entry, index) => (
                             <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="ore" value={entry.absenceHours} isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>
                     <TabsContent value="followers" className="gap-2 flex flex-col">
-                        {leaderboard?.sort((a, b) => b.followers - a.followers).map((entry, index) => (
+                        {leaderboard?.sort((a, b) => {
+                            if (b.followers === a.followers) {
+                                return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+                            }
+                            return b.followers - a.followers;
+                        }).map((entry, index) => (
                             <LeaderboardEntry userInternalId={entry.internalId} permissions={entry.permissions} key={index} rank={index + 1} name={entry.name} label="followers" value={entry.followers} singleLabel="follower" isRequestingUser={entry.isRequestingUser} />
                         ))}
                     </TabsContent>

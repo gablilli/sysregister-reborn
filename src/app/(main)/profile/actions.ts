@@ -8,6 +8,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import path from 'path';
 import sharp from 'sharp';
+import { getLeaderboard } from "../social/lb/actions";
+import { LeaderboardEntryType } from "../social/lb/page";
 
 export async function getUserData(userId?: string) {
     const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
@@ -50,32 +52,42 @@ export async function getUserData(userId?: string) {
     if (!user?.hasAcceptedSocialTerms) {
         return null;
     }
-    const [averageRank, absencesRank, delaysRank] = await Promise.all([
-        db.user.count({
-            where: {
-                average: {
-                    gt: user?.average || 0,
-                },
-                hasAcceptedSocialTerms: true,
-            },
-        }),
-        db.user.count({
-            where: {
-                absencesHours: {
-                    gt: user?.absencesHours || 0,
-                },
-                hasAcceptedSocialTerms: true,
-            },
-        }),
-        db.user.count({
-            where: {
-                delays: {
-                    gt: user?.delays || 0,
-                },
-                hasAcceptedSocialTerms: true,
-            },
-        }),
-    ]);
+
+    const leaderboard: LeaderboardEntryType[] = await getLeaderboard() as LeaderboardEntryType[];
+    if (!leaderboard) {
+        return null;
+    }
+    const averageLeaderboard = leaderboard.sort((a, b) => {
+        if (b.average === a.average) {
+            return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+        }
+        return b.average - a.average;
+    });
+    const averageRank = averageLeaderboard.findIndex(entry => entry.internalId === (userId || userData.internalId));
+
+    const absencesLeaderboard = leaderboard.sort((a, b) => {
+        if (b.absenceHours === a.absenceHours) {
+            return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+        }
+        return b.absenceHours - a.absenceHours;
+    });
+    const absencesRank = absencesLeaderboard.findIndex(entry => entry.internalId === (userId || userData.internalId));
+
+    const delaysLeaderboard = leaderboard.sort((a, b) => {
+        if (b.delaysNumber === a.delaysNumber) {
+            return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+        }
+        return b.delaysNumber - a.delaysNumber;
+    });
+    const delaysRank = delaysLeaderboard.findIndex(entry => entry.internalId === (userId || userData.internalId));
+
+    const followersLeaderboard = leaderboard.sort((a, b) => {
+        if (b.followers === a.followers) {
+            return new Date(b.lastServerDataUpdate).getTime() - new Date(a.lastServerDataUpdate).getTime();
+        }
+        return b.followers - a.followers;
+    });
+    const followersRank = followersLeaderboard.findIndex(entry => entry.internalId === (userId || userData.internalId));
 
     const isFollowed = user?.followers?.some(follow => follow.followedId === (userId || userData.internalId)) || false;
     const likeCount = postCountResult.reduce((acc, post) => acc + post.likes.length, 0);
@@ -83,10 +95,10 @@ export async function getUserData(userId?: string) {
         averageRank: averageRank + 1,
         absencesRank: absencesRank + 1,
         delaysRank: delaysRank + 1,
+        followersRank: followersRank + 1,
         followCount: user?.followers?.length || 0,
         isFollowed: isFollowed,
     };
-
     return { ...user, likeCount, ...userRanking };
 }
 
