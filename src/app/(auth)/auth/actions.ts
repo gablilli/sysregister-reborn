@@ -1,54 +1,51 @@
-"use client";
+"use server";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { getUserSession } from "./action";
+import { db } from "@/lib/db";
+import { SignJWT } from "jose";
+import { cookies } from "next/headers";
 
-export default function AuthPage() {
-  const router = useRouter();
-  const [uid, setUid] = useState("");
-  const [pass, setPass] = useState("");
-  const [error, setError] = useState<string | null>(null);
+export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
+  if (!uid || !pass) {
+    return "Credenziali non valide.";
+  }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const formData = new FormData();
+  formData.append("uid", uid);
+  formData.append("pwd", pass);
 
-    const result = await getUserSession({ uid, pass });
-
-    if (typeof result === "string") {
-      setError(result);
-    } else {
-      setError(null);
-      localStorage.setItem("uid", uid);
-      localStorage.setItem("password", pass);
-      router.push("/dashboard");
+  const req = await fetch(
+    `https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd`,
+    {
+      method: "POST",
+      body: formData,
     }
-  }
-
-  function showError(msg: string) {
-    alert(msg);
-  }
-
-  if (error) {
-    showError(error);
-    setError(null);
-  }
-
-  return (
-    <form onSubmit={onSubmit}>
-      <input
-        type="text"
-        value={uid}
-        onChange={(e) => setUid(e.target.value)}
-        placeholder="UID"
-      />
-      <input
-        type="password"
-        value={pass}
-        onChange={(e) => setPass(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit">Login</button>
-    </form>
   );
+
+  const setCookies = req.headers.get("set-cookie")?.split("; ");
+  const expiry = req.headers.get("expires");
+  const token = setCookies?.find((cookie) => cookie.startsWith("PHPSESSID="))?.split("=")[1];
+
+  if (!token || !expiry) {
+    return "Credenziali non valide.";
+  }
+
+  const user = await db.user.upsert({
+    where: { id: uid },
+    create: { id: uid },
+    update: { id: uid },
+  });
+
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  const alg = "HS256";
+  const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
+    .setProtectedHeader({ alg })
+    .setIssuedAt()
+    .setExpirationTime("2h")
+    .sign(secret);
+
+  cookies().set("internal_token", tokenJwt);
+  cookies().set("tokenExpiry", new Date(expiry).toISOString());
+  cookies().set("token", token);
+
+  return true;
 }
