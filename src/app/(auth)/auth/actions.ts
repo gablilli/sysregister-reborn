@@ -47,5 +47,5 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   cookies().set("tokenExpiry", new Date(expiry).toISOString());
   cookies().set("token", token);
 
-  return true;
+  return null; // nessun errore = successo
 }
