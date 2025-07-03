@@ -6,6 +6,5 @@ SysRegister offered an improved web UI for the ClasseViva school register and ad
 
 ---
 
-### SysRegister has been forced to shut down.  
-#### Recently, ClasseViva has decided to ban our servers, as a result, SysRegister can no longer access the necessary data to function, for this reason I've decided to not continue with the project.
-
+### FORK FROM SYSREGISTER
+#### I'm reviving the beautiful SysRegister in this new fork! F7** Classeviva!
