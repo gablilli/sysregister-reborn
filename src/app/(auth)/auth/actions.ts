@@ -1,8 +1,11 @@
 "use server";
 
+import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
-import { SignJWT } from "jose";
+import { JSDOM } from "jsdom";
 import { cookies } from "next/headers";
+import { SignJWT } from "jose";
+import { getUserDetailsFromToken } from "@/lib/utils";
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
   if (!uid || !pass) {
@@ -35,8 +38,9 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     update: { id: uid },
   });
 
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
   const alg = "HS256";
+
   const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
     .setProtectedHeader({ alg })
     .setIssuedAt()
@@ -46,6 +50,67 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   cookies().set("internal_token", tokenJwt);
   cookies().set("tokenExpiry", new Date(expiry).toISOString());
   cookies().set("token", token);
+}
 
-  return null; // nessun errore = successo
+export async function getUserDetails() {
+  const internalToken = cookies().get("internal_token")?.value || "";
+  const userData = await getUserDetailsFromToken(internalToken);
+  if (!userData) {
+    return handleAuthError();
+  }
+
+  const page = await (
+    await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
+      headers: {
+        Cookie: `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
+      },
+    })
+  ).text();
+
+  const dom = new JSDOM(page);
+
+  try {
+    const schoolName = dom.window.document.querySelector("span.scuola")?.textContent;
+    return {
+      schoolName,
+    };
+  } catch {
+    return handleAuthError();
+  }
+}
+
+export async function verifySession() {
+  const internalToken = cookies().get("internal_token")?.value || "";
+  const userData = await getUserDetailsFromToken(internalToken);
+
+  if (!userData) {
+    return false;
+  }
+
+  const page = await (
+    await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
+      headers: {
+        Cookie: `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
+      },
+    })
+  ).text();
+
+  const dom = new JSDOM(page);
+
+  try {
+    if (dom.window.document.querySelector("span.scuola")) {
+      const internalUser = await db.user.findUnique({
+        where: { id: userData.uid },
+      });
+      if (internalUser && internalUser.internalId === userData.internalId) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } catch {
+    return false;
+  }
 }
