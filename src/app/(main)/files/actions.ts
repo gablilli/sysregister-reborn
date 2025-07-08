@@ -6,9 +6,7 @@ import { getSessionUser } from "@/app/(auth)/auth/actions";
 
 export async function getBacheca() {
     const user = await getSessionUser();
-    if (!user) {
-        return handleAuthError();
-    }
+    if (!user) return handleAuthError();
     const formData = new FormData();
     formData.append("action", "get_comunicazioni");
     const res = await fetch(`https://web.spaggiari.eu/sif/app/default/bacheca_personale.php`, {
@@ -29,9 +27,7 @@ export async function getBacheca() {
 
 export async function setReadBachecaItem(itemId: string) {
     const user = await getSessionUser();
-    if (!user) {
-        return handleAuthError();
-    }
+    if (!user) return handleAuthError();
     const formData = new FormData();
     formData.append("action", "read_all");
     formData.append("id_relazioni", `[${itemId}]`);
