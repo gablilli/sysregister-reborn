@@ -1,12 +1,12 @@
 "use server";
 
 import { handleAuthError } from "@/lib/api";
-import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
+import { getSessionUser } from "@/app/(auth)/auth/actions";
 
 export async function getBacheca() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) {
+    const user = await getSessionUser();
+    if (!user) {
         return handleAuthError();
     }
     const formData = new FormData();
@@ -14,7 +14,7 @@ export async function getBacheca() {
     const res = await fetch(`https://web.spaggiari.eu/sif/app/default/bacheca_personale.php`, {
         method: "POST",
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${user.id};`,
         },
         body: formData
     });
@@ -28,8 +28,8 @@ export async function getBacheca() {
 }
 
 export async function setReadBachecaItem(itemId: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) {
+    const user = await getSessionUser();
+    if (!user) {
         return handleAuthError();
     }
     const formData = new FormData();
@@ -38,7 +38,7 @@ export async function setReadBachecaItem(itemId: string) {
     await fetch(`https://web.spaggiari.eu/sif/app/default/bacheca_personale.php`, {
         method: "POST",
         headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
+            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${user.id};`,
         },
         body: formData
     });
