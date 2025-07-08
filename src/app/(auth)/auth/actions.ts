@@ -83,3 +83,19 @@ export async function getUserDetails(uid: string) {
   const user = await db.user.findUnique({ where: { id: uid } });
   return user || null;
 }
+
+// Controlla se l'utente ha 'school' e se no la aggiorna
+export async function checkAndUpdateUserSchool(user: { id: string; school?: any }) {
+  if (!user.school) {
+    const userDetails = await getUserDetails(user.id);
+    if (userDetails?.school) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { school: userDetails.school },
+      });
+      return userDetails.school;
+    }
+    return null;
+  }
+  return user.school;
+}
