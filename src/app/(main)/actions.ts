@@ -165,7 +165,7 @@ export async function updateServerData() {
             await db.user.update({
                 where: { id: user.id },
                 data: {
-                    school: school.schoolName
+                    school: school.school
                 }
             });
         }
