@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { SignJWT } from 'jose';
+import { SignJWT, jwtVerify } from 'jose';
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
   if (!uid || !pass) return 'Credenziali non valide.';
@@ -35,7 +35,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     const token = data.token;
     const studentId = uid.replace(/\D/g, '');
 
-    const user = await db.user.upsert({
+    await db.user.upsert({
       where: { id: uid },
       create: { id: uid, internalId: studentId },
       update: { internalId: studentId },
@@ -59,4 +59,27 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     console.error(err);
     return 'Errore durante il login.';
   }
+}
+
+// Verifica che il token JWT sia valido e ritorna true/false
+export async function verifySession() {
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get('internal_token')?.value;
+
+    if (!token) return false;
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+
+    return !!payload.uid;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Prende i dettagli utente dal database
+export async function getUserDetails(uid: string) {
+  const user = await db.user.findUnique({ where: { id: uid } });
+  return user || null;
 }
