@@ -2,8 +2,7 @@
 
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { SignJWT, jwtVerify, decodeJwt } from 'jose';
-
+import { SignJWT, jwtVerify } from 'jose';
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
   if (!uid || !pass) return 'Credenziali non valide.';
@@ -49,9 +48,9 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
       .setExpirationTime('2h')
       .sign(secret);
 
-    cookies().set('internal_token', jwt, { httpOnly: true, sameSite: 'lax', path: '/' });
-    cookies().set('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
-    cookies().set('tokenExpiry', new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), { httpOnly: true, sameSite: 'lax', path: '/' });
+    cookies().set('internal_token', jwt);
+    cookies().set('token', token);
+    cookies().set('tokenExpiry', new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString());
 
     return null;
 
@@ -61,44 +60,23 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   }
 }
 
-
 export async function verifySession() {
   try {
     const cookieStore = cookies();
     const token = cookieStore.get('internal_token')?.value;
+
     if (!token) return false;
+
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
+
     return !!payload.uid;
   } catch (e) {
     return false;
   }
 }
 
-
 export async function getUserDetails(uid: string) {
   const user = await db.user.findUnique({ where: { id: uid } });
   return user || null;
-}
-
-
-export async function getSessionUser() {
-  const token = cookies().get('internal_token')?.value;
-  if (!token) return null;
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    if (!payload.uid) return null;
-    const user = await getUserDetails(payload.uid as string);
-    return user;
-  } catch {
-    return null;
-  }
-}
-
-
-export function logoutUser() {
-  cookies().set('internal_token', '', { maxAge: 0, path: '/' });
-  cookies().set('token', '', { maxAge: 0, path: '/' });
-  cookies().set('tokenExpiry', '', { maxAge: 0, path: '/' });
 }
