@@ -3,29 +3,32 @@
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { SignJWT } from 'jose';
-import { getUserDetailsFromToken } from '@/lib/utils';
-import { JSDOM } from 'jsdom';
 
 export async function getUserSession({ uid, pass }: { uid: string, pass: string }) {
-    if (!uid || !pass) {
+    if (!uid || !pass) return "Credenziali non valide.";
+
+    const res = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Z-Dev-ApiKey": "Tg1NWEwNGIgIC0K",
+            "User-Agent": "CVVS/std/4.1.7 Android/10"
+        },
+        body: JSON.stringify({
+            ident: null,
+            uid,
+            pass
+        })
+    });
+
+    if (!res.ok) {
         return "Credenziali non valide.";
     }
 
-    const formData = new FormData();
-    formData.append("uid", uid);
-    formData.append("pwd", pass);
-
-    const req = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
-        method: "POST",
-        body: formData,
-    });
-
-    const setCookies = req.headers.get("set-cookie")?.split("; ");
-    const expiry = req.headers.get("expires");
-    const token = setCookies?.find(cookie => cookie.startsWith("HttpOnly, PHPSESSID="))?.split("=")[1];
-
-    if (!token || !expiry) {
-        return "Credenziali non valide.";
+    const data = await res.json();
+    const token = data.token;
+    if (!token) {
+        return "Token mancante.";
     }
 
     const user = await db.user.upsert({
@@ -43,53 +46,7 @@ export async function getUserSession({ uid, pass }: { uid: string, pass: string 
         .sign(secret);
 
     cookies().set("internal_token", tokenJwt);
-    cookies().set("tokenExpiry", new Date(expiry).toISOString());
-    cookies().set("token", token);
-}
+    cookies().set("token", token); // il vero token usato nelle richieste future
 
-export async function getUserDetails() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) return null;
-
-    const page = await (await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
-        headers: {
-            Cookie: `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
-        },
-    })).text();
-
-    const dom = new JSDOM(page);
-
-    try {
-        const schoolName = dom.window.document.querySelector("span.scuola")?.textContent;
-        return {
-            schoolName
-        };
-    } catch {
-        return null;
-    }
-}
-
-export async function verifySession() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) return false;
-
-    const page = await (await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
-        headers: {
-            Cookie: `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
-        },
-    })).text();
-
-    const dom = new JSDOM(page);
-
-    try {
-        if (dom.window.document.querySelector("span.scuola")) {
-            const internalUser = await db.user.findUnique({
-                where: { id: userData.uid }
-            });
-            return internalUser?.internalId === userData.internalId;
-        }
-        return false;
-    } catch {
-        return false;
-    }
+    return "Login OK";
 }
