@@ -26,7 +26,15 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
       body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      console.error('Errore nel parsing JSON:', jsonErr);
+      throw jsonErr;
+    }
+
+    console.log('Login API response', { status: res.status, data });
 
     if (!res.ok || !data.token) {
       return 'Credenziali non valide.';
@@ -55,7 +63,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     return null;
 
   } catch (err) {
-    console.error(err);
+    console.error('Errore durante il login:', err);
     return 'Errore durante il login.';
   }
 }
