@@ -73,7 +73,7 @@ export async function verifySession() {
     const { payload } = await jwtVerify(token, secret);
 
     return !!payload.uid;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
