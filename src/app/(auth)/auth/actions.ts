@@ -13,6 +13,8 @@ const API_HEADERS = {
 };
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
+  console.log("[getUserSession] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
+
   if (!uid || !pass) return "Credenziali non valide.";
 
   const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
@@ -21,8 +23,18 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     body: JSON.stringify({ ident: uid, password: pass, uid }),
   });
 
-  if (!resp.ok) return "Credenziali non valide.";
+  console.log("[getUserSession] response status:", resp.status);
+
+  if (!resp.ok) {
+    const errorText = await resp.text();
+    console.log("[getUserSession] response non ok:", errorText);
+    return "Credenziali non valide.";
+  }
+
   const { token, expire } = await resp.json();
+
+  console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
+
   if (!token || !expire) return "Credenziali non valide.";
 
   const user = await db.user.upsert({
@@ -41,43 +53,4 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   cookies().set("internal_token", tokenJwt);
   cookies().set("tokenExpiry", new Date(expire).toISOString());
   cookies().set("token", token);
-}
-
-export async function getUserDetails() {
-  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-  if (!userData) return handleAuthError();
-
-  try {
-    const res = await fetch("https://web.spaggiari.eu/rest/v1/auth/status", {
-      headers: {
-        ...API_HEADERS,
-        Authorization: `Bearer ${cookies().get("token")?.value}`,
-      },
-    });
-    if (!res.ok) throw new Error("Auth status error");
-    const data = await res.json();
-    return { schoolName: data.school?.name };
-  } catch {
-    return handleAuthError();
-  }
-}
-
-export async function verifySession() {
-  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-  if (!userData) return handleAuthError();
-
-  try {
-    const res = await fetch("https://web.spaggiari.eu/rest/v1/auth/status", {
-      headers: {
-        ...API_HEADERS,
-        Authorization: `Bearer ${cookies().get("token")?.value}`,
-      },
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    const internalUser = await db.user.findUnique({ where: { id: userData.uid } });
-    return !!(internalUser && internalUser.internalId === userData.internalId && data.authenticated);
-  } catch {
-    return false;
-  }
 }
