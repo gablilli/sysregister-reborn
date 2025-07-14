@@ -8,8 +8,8 @@ import { getUserDetailsFromToken } from "@/lib/utils";
 
 const API_HEADERS = {
   "Content-Type": "application/json",
-  "User-Agent": "zorro/1.0",
-  "Z-Dev-Apikey": "+zorro+",
+  "User-Agent": "CVVS/std/4.1.7 Android/10",
+  "Z-Dev-Apikey": "Tg1NWEwNGIgIC0K",
 };
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
