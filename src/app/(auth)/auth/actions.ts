@@ -22,7 +22,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   });
 
   if (!resp.ok) return "Credenziali non valide.";
-  const { token, ident, expire } = await resp.json();
+  const { token, expire } = await resp.json();
   if (!token || !expire) return "Credenziali non valide.";
 
   const user = await db.user.upsert({
