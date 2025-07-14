@@ -1,90 +1,83 @@
-'use server';
+"use server";
 
-import { db } from '@/lib/db';
-import { cookies } from 'next/headers';
-import { SignJWT, jwtVerify } from 'jose';
+import { handleAuthError } from "@/lib/api";
+import { db } from "@/lib/db";
+import { cookies } from "next/headers";
+import { SignJWT } from "jose";
+import { getUserDetailsFromToken } from "@/lib/utils";
+
+const API_HEADERS = {
+  "Content-Type": "application/json",
+  "User-Agent": "zorro/1.0",
+  "Z-Dev-Apikey": "+zorro+",
+};
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
-  if (!uid || !pass) return 'Credenziali non valide.';
+  if (!uid || !pass) return "Credenziali non valide.";
 
-  const body = {
-    ident: null,
-    pass: pass,
-    uid: uid,
-  };
+  const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+    method: "POST",
+    headers: API_HEADERS,
+    body: JSON.stringify({ ident: uid, password: pass, uid }),
+  });
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Z-Dev-ApiKey': 'Tg1NWEwNGIgIC0K',
-    'User-Agent': 'CVVS/std/4.1.7 Android/10',
-  };
+  if (!resp.ok) return "Credenziali non valide.";
+  const { token, ident, expire } = await resp.json();
+  if (!token || !expire) return "Credenziali non valide.";
+
+  const user = await db.user.upsert({
+    where: { id: uid },
+    create: { id: uid },
+    update: { id: uid },
+  });
+
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("2h")
+    .sign(secret);
+
+  cookies().set("internal_token", tokenJwt);
+  cookies().set("tokenExpiry", new Date(expire).toISOString());
+  cookies().set("token", token);
+}
+
+export async function getUserDetails() {
+  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+  if (!userData) return handleAuthError();
 
   try {
-    const res = await fetch('https://web.spaggiari.eu/rest/v1/auth/login', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
+    const res = await fetch("https://web.spaggiari.eu/rest/v1/auth/status", {
+      headers: {
+        ...API_HEADERS,
+        Authorization: `Bearer ${cookies().get("token")?.value}`,
+      },
     });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (jsonErr) {
-      console.error('Errore nel parsing JSON:', jsonErr);
-      throw jsonErr;
-    }
-
-    console.log('Login API response', { status: res.status, data });
-
-    if (!res.ok || !data.token) {
-      return 'Credenziali non valide.';
-    }
-
-    const token = data.token;
-    const studentId = uid.replace(/\D/g, '');
-
-    await db.user.upsert({
-      where: { id: uid },
-      create: { id: uid, internalId: studentId },
-      update: { internalId: studentId },
-    });
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const jwt = await new SignJWT({ uid, internalId: studentId })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .sign(secret);
-
-    cookies().set('internal_token', jwt);
-    cookies().set('token', token);
-    cookies().set('tokenExpiry', new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString());
-
-    return null;
-
-  } catch (err) {
-    console.error('Errore durante il login:', err);
-    return 'Errore durante il login.';
+    if (!res.ok) throw new Error("Auth status error");
+    const data = await res.json();
+    return { schoolName: data.school?.name };
+  } catch {
+    return handleAuthError();
   }
 }
 
 export async function verifySession() {
+  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+  if (!userData) return handleAuthError();
+
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get('internal_token')?.value;
-
-    if (!token) return false;
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-
-    return !!payload.uid;
+    const res = await fetch("https://web.spaggiari.eu/rest/v1/auth/status", {
+      headers: {
+        ...API_HEADERS,
+        Authorization: `Bearer ${cookies().get("token")?.value}`,
+      },
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const internalUser = await db.user.findUnique({ where: { id: userData.uid } });
+    return !!(internalUser && internalUser.internalId === userData.internalId && data.authenticated);
   } catch {
     return false;
   }
-}
-
-export async function getUserDetails(uid: string) {
-  const user = await db.user.findUnique({ where: { id: uid } });
-  return user || null;
 }
