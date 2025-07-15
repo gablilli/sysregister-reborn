@@ -31,9 +31,8 @@ export default function Page() {
         const error = await getUserSession({ uid, pass });
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-
         if (error) {
-          showError(String(error));  // Converte error in stringa
+          showError(error);
         } else {
           if (goTo) {
             router.push(goTo);
@@ -41,8 +40,8 @@ export default function Page() {
             router.push("/");
           }
         }
-      } catch (e) {
-        showError("Errore sconosciuto. Riprova più tardi.");  // Gestione errore globale
+      } catch {
+        return;
       }
       setLoading(false);
     },
@@ -86,12 +85,11 @@ export default function Page() {
       </div>
       <div className="flex-1 flex w-full px-6 items-center flex-col justify-end">
         <div className="p-4 px-0 w-full">
-          <InstallPWAPrompt />
-        </div>
+          <InstallPWAPrompt /></div>
         <form
           className="w-full"
-          onSubmit={async (e) => {
-            e.preventDefault();  // Ora utilizzi la variabile `e` solo per preventDefault
+          onSubmit={async (e) => { // Ho usato `e` per prevenire il default
+            e.preventDefault();
             const formData = new FormData(e.currentTarget);
             await trySignIn(formData);
           }}
@@ -109,7 +107,7 @@ export default function Page() {
             />
           </div>
           <span className="text-accent text-left text-sm mt-1 w-full">
-            {error && error !== "" ? error : ""}
+            {error.toString()}
           </span>
           <Button loading={loading} className="w-full mt-7">
             Accesso
