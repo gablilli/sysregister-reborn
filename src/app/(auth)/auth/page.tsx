@@ -14,8 +14,8 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  function showError(error: string) {
-    setError(error);
+  function showError(errorMessage: string) {
+    setError(errorMessage);
     setLoading(false);
     setTimeout(() => {
       setError("");
@@ -31,23 +31,17 @@ export default function Page() {
         const error = await getUserSession({ uid, pass });
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-
-        // Se `error` è un oggetto, estrai il messaggio da esso
-        if (typeof error === "string") {
+        if (error) {
           showError(error);
-        } else if (error && error.error) {
-          showError(error.error);
-        }
-
-        if (!error) {
+        } else {
           if (goTo) {
             router.push(goTo);
           } else {
             router.push("/");
           }
         }
-      } catch {
-        return;
+      } catch (err) {
+        showError("Si è verificato un errore durante l'accesso");
       }
       setLoading(false);
     },
@@ -91,7 +85,8 @@ export default function Page() {
       </div>
       <div className="flex-1 flex w-full px-6 items-center flex-col justify-end">
         <div className="p-4 px-0 w-full">
-          <InstallPWAPrompt /></div>
+          <InstallPWAPrompt />
+        </div>
         <form
           className="w-full"
           onSubmit={async (e) => {
