@@ -185,7 +185,7 @@ export async function updateServerData() {
   }
 
   if (!user.school) {
-  const school = await getUserDetails();
+    const school = await getUserDetails();
     if (school) {
       await db.user.update({
         where: { id: user.id },
