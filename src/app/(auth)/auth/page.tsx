@@ -91,7 +91,7 @@ export default function Page() {
         <form
           className="w-full"
           onSubmit={async (e) => {
-            e.preventDefault();
+            e.preventDefault();  // Ora utilizzi la variabile `e` solo per preventDefault
             const formData = new FormData(e.currentTarget);
             await trySignIn(formData);
           }}
