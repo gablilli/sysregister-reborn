@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getUserSession } from "./actions";
 import { useRouter, useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
+
 export default function Page() {
   const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
@@ -30,8 +31,9 @@ export default function Page() {
         const error = await getUserSession({ uid, pass });
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
+
         if (error) {
-          showError(error);
+          showError(String(error));  // Converte error in stringa
         } else {
           if (goTo) {
             router.push(goTo);
@@ -39,8 +41,8 @@ export default function Page() {
             router.push("/");
           }
         }
-      } catch {
-        return;
+      } catch (e) {
+        showError("Errore sconosciuto. Riprova più tardi.");  // Gestione errore globale
       }
       setLoading(false);
     },
@@ -84,7 +86,8 @@ export default function Page() {
       </div>
       <div className="flex-1 flex w-full px-6 items-center flex-col justify-end">
         <div className="p-4 px-0 w-full">
-          <InstallPWAPrompt /></div>
+          <InstallPWAPrompt />
+        </div>
         <form
           className="w-full"
           onSubmit={async (e) => {
@@ -106,7 +109,7 @@ export default function Page() {
             />
           </div>
           <span className="text-accent text-left text-sm mt-1 w-full">
-            {error.toString()}
+            {error && error !== "" ? error : ""}
           </span>
           <Button loading={loading} className="w-full mt-7">
             Accesso
