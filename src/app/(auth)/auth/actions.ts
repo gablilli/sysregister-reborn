@@ -15,42 +15,57 @@ const API_HEADERS = {
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
   console.log("[getUserSession] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
 
-  if (!uid || !pass) return "Credenziali non valide.";
-
-  const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
-    method: "POST",
-    headers: API_HEADERS,
-    body: JSON.stringify({ ident: uid, password: pass, uid }),
-  });
-
-  console.log("[getUserSession] response status:", resp.status);
-
-  if (!resp.ok) {
-    const errorText = await resp.text();
-    console.log("[getUserSession] response non ok:", errorText);
-    return "Credenziali non valide.";
+  if (!uid || !pass) {
+    console.error("[getUserSession] Credenziali mancanti o invalide");
+    return { error: "Credenziali non valide." };
   }
 
-  const { token, expire } = await resp.json();
+  try {
+    const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+      method: "POST",
+      headers: API_HEADERS,
+      body: JSON.stringify({ ident: uid, password: pass, uid }),
+    });
 
-  console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
+    console.log("[getUserSession] response status:", resp.status);
 
-  if (!token || !expire) return "Credenziali non valide.";
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error("[getUserSession] Errore durante il login:", errorText);
+      return { error: "Credenziali non valide.", details: errorText };
+    }
 
-  const user = await db.user.upsert({
-    where: { id: uid },
-    create: { id: uid },
-    update: { id: uid },
-  });
+    const { token, expire } = await resp.json();
 
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-  const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("2h")
-    .sign(secret);
+    console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
 
-  cookies().set("internal_token", tokenJwt);
-  cookies().set("tokenExpiry", new Date(expire).toISOString());
-  cookies().set("token", token);
+    if (!token || !expire) {
+      console.error("[getUserSession] Token o data di scadenza mancanti");
+      return { error: "Credenziali non valide." };
+    }
+
+    const user = await db.user.upsert({
+      where: { id: uid },
+      create: { id: uid },
+      update: { id: uid },
+    });
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("2h")
+      .sign(secret);
+
+    cookies().set("internal_token", tokenJwt);
+    cookies().set("tokenExpiry", new Date(expire).toISOString());
+    cookies().set("token", token);
+
+    console.log("[getUserSession] Token JWT generato e cookies impostati");
+
+    return { success: true, message: "Autenticazione riuscita." };
+  } catch (error) {
+    console.error("[getUserSession] Errore nella comunicazione con il server:", error);
+    return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+  }
 }
