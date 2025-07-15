@@ -1,10 +1,8 @@
 "use server";
 
-import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
-import { getUserDetailsFromToken } from "@/lib/utils";
 
 const API_HEADERS = {
   "Content-Type": "application/json",
