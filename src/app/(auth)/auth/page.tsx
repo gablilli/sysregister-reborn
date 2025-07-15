@@ -31,9 +31,15 @@ export default function Page() {
         const error = await getUserSession({ uid, pass });
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-        if (error) {
+
+        // Se `error` è un oggetto, estrai il messaggio da esso
+        if (typeof error === "string") {
           showError(error);
-        } else {
+        } else if (error && error.error) {
+          showError(error.error);
+        }
+
+        if (!error) {
           if (goTo) {
             router.push(goTo);
           } else {
@@ -88,7 +94,7 @@ export default function Page() {
           <InstallPWAPrompt /></div>
         <form
           className="w-full"
-          onSubmit={async (e) => { // Ho usato `e` per prevenire il default
+          onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             await trySignIn(formData);
