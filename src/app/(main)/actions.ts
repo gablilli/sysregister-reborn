@@ -3,7 +3,6 @@
 import { handleAuthError } from "@/lib/api";
 import { AgendaItemType, GradeType, Notification } from "@/lib/types";
 import { cookies } from "next/headers";
-import { getUserDetails, verifySession } from "../(auth)/auth/actions";
 import { db } from "@/lib/db";
 import { getMarks, getPresence } from "./register/actions";
 import { getUserDetailsFromToken } from "@/lib/utils";
