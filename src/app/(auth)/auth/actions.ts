@@ -41,6 +41,9 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   }
 
   try {
+    let token: string | null = null;
+    let expire: string | null = null;
+    
     // Try the new authentication endpoint first
     console.log("[getUserSession] Tentativo con nuovo endpoint auth-p7");
     let resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
@@ -49,32 +52,42 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
       body: JSON.stringify({ uid, pass }),
     });
 
-    // If the new endpoint fails, fallback to the old one
-    if (!resp.ok) {
+    if (resp.ok) {
+      try {
+        const responseData = await resp.json();
+        token = responseData.token || responseData.data?.token || null;
+        expire = responseData.expire || responseData.data?.expire || null;
+      } catch (e) {
+        console.warn("[getUserSession] Errore parsing risposta nuovo endpoint:", e);
+      }
+    }
+
+    // If the new endpoint fails or doesn't return valid data, fallback to the old one
+    if (!token || !expire) {
       console.log("[getUserSession] Fallback al vecchio endpoint REST v1");
       resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
         method: "POST",
         headers: API_HEADERS,
         body: JSON.stringify({ ident: uid, password: pass, uid }),
       });
+
+      console.log("[getUserSession] response status:", resp.status);
+
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error("[getUserSession] Errore durante il login:", errorText);
+        return { error: "Credenziali non valide.", details: errorText };
+      }
+
+      const responseData = await resp.json();
+      token = responseData.token || null;
+      expire = responseData.expire || null;
     }
-
-    console.log("[getUserSession] response status:", resp.status);
-
-    if (!resp.ok) {
-      const errorText = await resp.text();
-      console.error("[getUserSession] Errore durante il login:", errorText);
-      return { error: "Credenziali non valide.", details: errorText };
-    }
-
-    const responseData = await resp.json();
-    const token = responseData.token || responseData.data?.token;
-    const expire = responseData.expire || responseData.data?.expire;
 
     console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
 
-    if (!token || !expire) {
-      console.error("[getUserSession] Token o data di scadenza mancanti");
+    if (!token || !expire || typeof token !== 'string' || typeof expire !== 'string') {
+      console.error("[getUserSession] Token o data di scadenza mancanti o non validi");
       return { error: "Credenziali non valide." };
     }
 
