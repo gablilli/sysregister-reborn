@@ -41,11 +41,23 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   }
 
   try {
-    const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+    // Try the new authentication endpoint first
+    console.log("[getUserSession] Tentativo con nuovo endpoint auth-p7");
+    let resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
       method: "POST",
       headers: API_HEADERS,
-      body: JSON.stringify({ ident: uid, password: pass, uid }),
+      body: JSON.stringify({ uid, pass }),
     });
+
+    // If the new endpoint fails, fallback to the old one
+    if (!resp.ok) {
+      console.log("[getUserSession] Fallback al vecchio endpoint REST v1");
+      resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({ ident: uid, password: pass, uid }),
+      });
+    }
 
     console.log("[getUserSession] response status:", resp.status);
 
@@ -55,7 +67,9 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
       return { error: "Credenziali non valide.", details: errorText };
     }
 
-    const { token, expire } = await resp.json();
+    const responseData = await resp.json();
+    const token = responseData.token || responseData.data?.token;
+    const expire = responseData.expire || responseData.data?.expire;
 
     console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
 
