@@ -385,7 +385,9 @@ function UpdateButton({ user, updateProfile }: { user: InternalUserData, updateP
                                 document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                                 setLoading(false);
                             } catch (e) {
-                                posthog.captureException(e);
+                                if (posthog.__loaded) {
+                                    posthog.captureException(e);
+                                }
                                 setLoading(false);
                             }
                         }}>
