@@ -43,6 +43,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   try {
     let token: string | null = null;
     let expire: string | null = null;
+    let restV1Error: string | null = null;
     
     // Try the REST v1 endpoint first (known to work)
     console.log("[getUserSession] Tentativo con endpoint REST v1");
@@ -67,6 +68,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
         console.warn("[getUserSession] Errore parsing risposta REST v1:", e);
       }
     } else {
+      restV1Error = responseText;
       console.error("[getUserSession] REST v1 failed with status:", resp.status, "body:", responseText);
     }
 
@@ -84,6 +86,15 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
       if (!resp.ok) {
         const errorText = await resp.text();
         console.error("[getUserSession] Errore durante il login:", errorText);
+        
+        // If both endpoints failed, check if it's geo-blocking
+        if (errorText.includes("Access Denied") || (restV1Error && restV1Error.includes("Access Denied"))) {
+          return { 
+            error: "Accesso bloccato dal server ClasseViva. L'applicazione potrebbe essere geo-bloccata quando deployata su Vercel.", 
+            details: errorText 
+          };
+        }
+        
         return { error: "Credenziali non valide.", details: errorText };
       }
 
