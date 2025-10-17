@@ -38,6 +38,8 @@ next-env.d.ts
 # db
 *.db
 *.sqlite
+*.db-journal
+/prisma/migrations/
 
 # userassets
 /public/userassets/banners/*
