@@ -59,8 +59,10 @@ COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
-# Create directory for SQLite database
-RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app/prisma
+# Create directory for SQLite database and set ownership for all necessary directories
+RUN mkdir -p /app/prisma && \
+    chown -R nextjs:nodejs /app/prisma && \
+    chown -R nextjs:nodejs /app/node_modules
 
 USER nextjs
 
