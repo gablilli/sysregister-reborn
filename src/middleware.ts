@@ -12,10 +12,12 @@ export async function middleware(request: NextRequest) {
         if (!token || !tokenExpiryDate || tokenExpiryDate <= new Date() || !internal_token) {
             return NextResponse.redirect(new URL('/auth', request.url));
         }
+        return NextResponse.next();
     } else {
         if (token && tokenExpiryDate && tokenExpiryDate > new Date() && internal_token) {
             return NextResponse.redirect(new URL('/', request.url));
         }
+        return NextResponse.next();
     }
 }
 
