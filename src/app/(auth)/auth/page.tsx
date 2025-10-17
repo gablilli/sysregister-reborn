@@ -26,14 +26,18 @@ export default function Page() {
     async (formData: FormData) => {
       const uid = formData.get("sysregister-username") as string;
       const pass = formData.get("sysregister-password") as string;
+      console.log("[CLIENT] Attempting login with uid:", uid);
       setLoading(true);
       try {
-        const error = await getUserSession({ uid, pass });
+        const result = await getUserSession({ uid, pass });
+        console.log("[CLIENT] Login result:", result);
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-        if (error) {
-          showError(error);
+        if (result && "error" in result && result.error) {
+          console.error("[CLIENT] Login error:", result.error);
+          showError(result.error);
         } else {
+          console.log("[CLIENT] Login successful, redirecting...");
           if (goTo) {
             router.push(goTo);
           } else {
@@ -41,6 +45,7 @@ export default function Page() {
           }
         }
       } catch (err) {
+        console.error("[CLIENT] Exception during login:", err);
         showError("Si è verificato un errore durante l'accesso");
       }
       setLoading(false);

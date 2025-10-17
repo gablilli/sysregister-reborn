@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  sysregister:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sysregister-app
+    ports:
+      - "3000:3000"
+    environment:
+      # Database (SQLite file path)
+      - DATABASE_URL=file:/app/prisma/database.db
+      
+      # JWT Secret - CHANGE THIS IN PRODUCTION!
+      - JWT_SECRET=${JWT_SECRET:-changeme_use_a_strong_random_secret}
+      
+      # PostHog Analytics (optional)
+      - NEXT_PUBLIC_POSTHOG_KEY=${NEXT_PUBLIC_POSTHOG_KEY:-}
+      - NEXT_PUBLIC_POSTHOG_HOST=${NEXT_PUBLIC_POSTHOG_HOST:-}
+      
+      # Next.js settings
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/prisma
+      # Persist user uploaded files (avatars, banners)
+      - ./public/userassets:/app/public/userassets
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: sysregister-network

@@ -7,8 +7,30 @@ import { SignJWT } from "jose";
 const API_HEADERS = {
   "Content-Type": "application/json",
   "User-Agent": "CVVS/std/4.1.7 Android/10",
-  "Z-Dev-Apikey": "Tg1NWEwNGIgIC0K",
+  "Z-Dev-ApiKey": "Tg1NWEwNGIgIC0K",
 };
+
+export async function verifySession() {
+  try {
+    const token = cookies().get("token")?.value;
+    const tokenExpiry = cookies().get("tokenExpiry")?.value;
+    const internal_token = cookies().get("internal_token")?.value;
+
+    if (!token || !tokenExpiry || !internal_token) {
+      return false;
+    }
+
+    const tokenExpiryDate = new Date(tokenExpiry);
+    if (tokenExpiryDate <= new Date()) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[verifySession] Errore nella verifica della sessione:", error);
+    return false;
+  }
+}
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
   console.log("[getUserSession] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
@@ -19,26 +41,77 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   }
 
   try {
-    const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+    let token: string | null = null;
+    let expire: string | null = null;
+    let restV1Error: string | null = null;
+    
+    // Try the REST v1 endpoint first (known to work)
+    console.log("[getUserSession] Tentativo con endpoint REST v1");
+    let resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
       method: "POST",
       headers: API_HEADERS,
-      body: JSON.stringify({ ident: uid, password: pass, uid }),
+      body: JSON.stringify({ ident: null, pass: pass, uid: uid }),
     });
 
     console.log("[getUserSession] response status:", resp.status);
+    
+    // Log response text for debugging
+    const responseText = await resp.text();
+    console.log("[getUserSession] response body:", responseText);
 
-    if (!resp.ok) {
-      const errorText = await resp.text();
-      console.error("[getUserSession] Errore durante il login:", errorText);
-      return { error: "Credenziali non valide.", details: errorText };
+    if (resp.ok) {
+      try {
+        const responseData = JSON.parse(responseText);
+        token = responseData.token || null;
+        expire = responseData.expire || null;
+      } catch (e) {
+        console.warn("[getUserSession] Errore parsing risposta REST v1:", e);
+      }
+    } else {
+      restV1Error = responseText;
+      console.error("[getUserSession] REST v1 failed with status:", resp.status, "body:", responseText);
     }
 
-    const { token, expire } = await resp.json();
+    // If the REST v1 endpoint fails or doesn't return valid data, try the new auth-p7 endpoint
+    if (!token || !expire) {
+      console.log("[getUserSession] Tentativo con nuovo endpoint auth-p7");
+      resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({ uid, pass }),
+      });
+
+      console.log("[getUserSession] auth-p7 response status:", resp.status);
+
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error("[getUserSession] Errore durante il login:", errorText);
+        
+        // If both endpoints failed, check if it's geo-blocking
+        if (errorText.includes("Access Denied") || (restV1Error && restV1Error.includes("Access Denied"))) {
+          return { 
+            error: "Accesso bloccato dal server ClasseViva. L'applicazione potrebbe essere geo-bloccata quando deployata su Vercel.", 
+            details: errorText 
+          };
+        }
+        
+        return { error: "Credenziali non valide.", details: errorText };
+      }
+
+      try {
+        const responseData = await resp.json();
+        token = responseData.token || responseData.data?.token || null;
+        expire = responseData.expire || responseData.data?.expire || null;
+      } catch (e) {
+        console.error("[getUserSession] Errore parsing risposta auth-p7:", e);
+        return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+      }
+    }
 
     console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
 
-    if (!token || !expire) {
-      console.error("[getUserSession] Token o data di scadenza mancanti");
+    if (!token || !expire || typeof token !== 'string' || typeof expire !== 'string') {
+      console.error("[getUserSession] Token o data di scadenza mancanti o non validi");
       return { error: "Credenziali non valide." };
     }
 
