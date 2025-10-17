@@ -10,7 +10,7 @@ services:
       - "3000:3000"
     environment:
       # Database (SQLite file path)
-      - DATABASE_URL=file:/app/prisma/database.db
+      - DATABASE_URL=file:/app/data/database.db
       
       # JWT Secret - CHANGE THIS IN PRODUCTION!
       - JWT_SECRET=${JWT_SECRET:-changeme_use_a_strong_random_secret}
@@ -26,7 +26,7 @@ services:
     
     volumes:
       # Persist SQLite database
-      - ./data:/app/prisma
+      - ./data:/app/data
       # Persist user uploaded files (avatars, banners)
       - ./public/userassets:/app/public/userassets
     
