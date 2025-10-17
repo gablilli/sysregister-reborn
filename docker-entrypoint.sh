@@ -5,7 +5,17 @@ echo "Starting SysRegister application..."
 
 # Initialize database schema if it doesn't exist
 echo "Initializing database schema..."
-node node_modules/prisma/build/index.js db push --skip-generate --schema=/app/prisma/schema.prisma
+
+# Use Prisma CLI - path determined from package.json bin entry
+# In standalone mode, we don't have npx, so we call the binary directly
+PRISMA_BIN="node_modules/prisma/build/index.js"
+
+if [ ! -f "$PRISMA_BIN" ]; then
+    echo "Error: Prisma CLI not found at $PRISMA_BIN"
+    exit 1
+fi
+
+node "$PRISMA_BIN" db push --skip-generate --schema=/app/prisma/schema.prisma
 
 echo "Database schema initialized successfully"
 
