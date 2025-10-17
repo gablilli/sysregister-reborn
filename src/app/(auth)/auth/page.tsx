@@ -28,11 +28,11 @@ export default function Page() {
       const pass = formData.get("sysregister-password") as string;
       setLoading(true);
       try {
-        const error = await getUserSession({ uid, pass });
+        const result = await getUserSession({ uid, pass });
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-        if (error) {
-          showError(error);
+        if (result && "error" in result && result.error) {
+          showError(result.error);
         } else {
           if (goTo) {
             router.push(goTo);
@@ -40,7 +40,7 @@ export default function Page() {
             router.push("/");
           }
         }
-      } catch (err) {
+      } catch {
         showError("Si è verificato un errore durante l'accesso");
       }
       setLoading(false);

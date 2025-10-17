@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { getMarks, getPresence } from "./register/actions";
 import { getUserDetailsFromToken } from "@/lib/utils";
+import { verifySession } from "@/app/(auth)/auth/actions";
 
 const API_BASE = "https://web.spaggiari.eu/rest/v1";
 const USER_AGENT = "CVVS/std/4.1.7 Android/10";
@@ -18,6 +19,27 @@ function getHeaders(token: string) {
     "Authorization": `Bearer ${token}`,
     "Content-Type": "application/json",
   };
+}
+
+async function getUserDetails() {
+  const token = cookies().get("token")?.value;
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${API_BASE}/users/me`, {
+      headers: getHeaders(token),
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return {
+      schoolName: data?.school?.name || data?.schoolName || null,
+    };
+  } catch (error) {
+    console.error("[getUserDetails] Errore nel recupero dei dettagli utente:", error);
+    return null;
+  }
 }
 
 export async function getDayAgenda(date: Date) {

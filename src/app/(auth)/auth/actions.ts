@@ -10,6 +10,28 @@ const API_HEADERS = {
   "Z-Dev-Apikey": "Tg1NWEwNGIgIC0K",
 };
 
+export async function verifySession() {
+  try {
+    const token = cookies().get("token")?.value;
+    const tokenExpiry = cookies().get("tokenExpiry")?.value;
+    const internal_token = cookies().get("internal_token")?.value;
+
+    if (!token || !tokenExpiry || !internal_token) {
+      return false;
+    }
+
+    const tokenExpiryDate = new Date(tokenExpiry);
+    if (tokenExpiryDate <= new Date()) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[verifySession] Errore nella verifica della sessione:", error);
+    return false;
+  }
+}
+
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
   console.log("[getUserSession] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
 
