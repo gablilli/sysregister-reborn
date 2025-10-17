@@ -56,9 +56,11 @@ docker-compose logs -f
 
 The application will be available at: **http://localhost:3000**
 
-### 4. Initialize the Database
+### 4. Database Initialization
 
-On first run, the database will be created automatically. The SQLite database file will be stored in the `./data` directory.
+On first run, the database schema is **automatically created** when the container starts. The startup script runs `prisma db push` to initialize all required database tables. 
+
+The SQLite database file (`database.db`) is stored in the `./data` directory on your host machine and persisted across container restarts. No manual database setup is required.
 
 ## Configuration
 
@@ -178,17 +180,19 @@ sudo chown -R 1001:1001 ./data
 
 ### Database errors
 
-If you see Prisma/database errors:
+If you see Prisma/database errors, the database schema should be automatically initialized on container startup. If issues persist:
 ```bash
 # Access the container
 docker-compose exec sysregister sh
 
-# Run Prisma migrations
-npx prisma migrate deploy
+# Manually push database schema
+npx prisma db push --skip-generate
 
-# Generate Prisma client
-npx prisma generate
+# Exit the container
+exit
 ```
+
+Note: The database schema is automatically initialized when the container starts, so manual intervention should not be necessary in most cases.
 
 ## Production Deployment
 
