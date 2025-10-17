@@ -11,7 +11,9 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    posthog.captureException(error);
+    if (posthog.__loaded) {
+      posthog.captureException(error);
+    }
   }, [error]);
 
   return (
