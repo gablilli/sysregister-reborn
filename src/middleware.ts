@@ -3,10 +3,10 @@ import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    const token = request.cookies.get('token');
-    const internal_token = request.cookies.get('internal_token');
-    const tokenExpiry = request.cookies.get('tokenExpiry');
-    const tokenExpiryDate = tokenExpiry ? new Date(tokenExpiry.toString()) : null;
+    const token = request.cookies.get('token')?.value;
+    const internal_token = request.cookies.get('internal_token')?.value;
+    const tokenExpiry = request.cookies.get('tokenExpiry')?.value;
+    const tokenExpiryDate = tokenExpiry ? new Date(tokenExpiry) : null;
 
     if (request.nextUrl.pathname !== '/auth') {
         if (!token || !tokenExpiryDate || tokenExpiryDate <= new Date() || !internal_token) {
@@ -23,6 +23,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!api|_next/static|_next/image|_next/data|favicon.ico|icons|manifest.*).*)',
+        '/((?!api|_next|favicon.ico|icons|manifest).*)',
     ],
 }
