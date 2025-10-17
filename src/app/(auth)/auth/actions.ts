@@ -49,7 +49,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     let resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
       method: "POST",
       headers: API_HEADERS,
-      body: JSON.stringify({ ident: uid, password: pass, uid }),
+      body: JSON.stringify({ ident: null, pass: pass, uid: uid }),
     });
 
     console.log("[getUserSession] response status:", resp.status);
