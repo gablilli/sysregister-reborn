@@ -7,7 +7,7 @@ import { SignJWT } from "jose";
 const API_HEADERS = {
   "Content-Type": "application/json",
   "User-Agent": "CVVS/std/4.1.7 Android/10",
-  "Z-Dev-Apikey": "Tg1NWEwNGIgIC0K",
+  "Z-Dev-ApiKey": "Tg1NWEwNGIgIC0K",
 };
 
 export async function verifySession() {
@@ -53,15 +53,21 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     });
 
     console.log("[getUserSession] response status:", resp.status);
+    
+    // Log response text for debugging
+    const responseText = await resp.text();
+    console.log("[getUserSession] response body:", responseText);
 
     if (resp.ok) {
       try {
-        const responseData = await resp.json();
+        const responseData = JSON.parse(responseText);
         token = responseData.token || null;
         expire = responseData.expire || null;
       } catch (e) {
         console.warn("[getUserSession] Errore parsing risposta REST v1:", e);
       }
+    } else {
+      console.error("[getUserSession] REST v1 failed with status:", resp.status, "body:", responseText);
     }
 
     // If the REST v1 endpoint fails or doesn't return valid data, try the new auth-p7 endpoint
