@@ -79,9 +79,14 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
         return { error: "Credenziali non valide.", details: errorText };
       }
 
-      const responseData = await resp.json();
-      token = responseData.token || null;
-      expire = responseData.expire || null;
+      try {
+        const responseData = await resp.json();
+        token = responseData.token || null;
+        expire = responseData.expire || null;
+      } catch (e) {
+        console.error("[getUserSession] Errore parsing risposta vecchio endpoint:", e);
+        return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+      }
     }
 
     console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
