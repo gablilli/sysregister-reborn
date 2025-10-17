@@ -44,34 +44,36 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     let token: string | null = null;
     let expire: string | null = null;
     
-    // Try the new authentication endpoint first
-    console.log("[getUserSession] Tentativo con nuovo endpoint auth-p7");
-    let resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
+    // Try the REST v1 endpoint first (known to work)
+    console.log("[getUserSession] Tentativo con endpoint REST v1");
+    let resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
       method: "POST",
       headers: API_HEADERS,
-      body: JSON.stringify({ uid, pass }),
+      body: JSON.stringify({ ident: uid, password: pass, uid }),
     });
+
+    console.log("[getUserSession] response status:", resp.status);
 
     if (resp.ok) {
       try {
         const responseData = await resp.json();
-        token = responseData.token || responseData.data?.token || null;
-        expire = responseData.expire || responseData.data?.expire || null;
+        token = responseData.token || null;
+        expire = responseData.expire || null;
       } catch (e) {
-        console.warn("[getUserSession] Errore parsing risposta nuovo endpoint:", e);
+        console.warn("[getUserSession] Errore parsing risposta REST v1:", e);
       }
     }
 
-    // If the new endpoint fails or doesn't return valid data, fallback to the old one
+    // If the REST v1 endpoint fails or doesn't return valid data, try the new auth-p7 endpoint
     if (!token || !expire) {
-      console.log("[getUserSession] Fallback al vecchio endpoint REST v1");
-      resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+      console.log("[getUserSession] Tentativo con nuovo endpoint auth-p7");
+      resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
         method: "POST",
         headers: API_HEADERS,
-        body: JSON.stringify({ ident: uid, password: pass, uid }),
+        body: JSON.stringify({ uid, pass }),
       });
 
-      console.log("[getUserSession] response status:", resp.status);
+      console.log("[getUserSession] auth-p7 response status:", resp.status);
 
       if (!resp.ok) {
         const errorText = await resp.text();
@@ -81,10 +83,10 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
 
       try {
         const responseData = await resp.json();
-        token = responseData.token || null;
-        expire = responseData.expire || null;
+        token = responseData.token || responseData.data?.token || null;
+        expire = responseData.expire || responseData.data?.expire || null;
       } catch (e) {
-        console.error("[getUserSession] Errore parsing risposta vecchio endpoint:", e);
+        console.error("[getUserSession] Errore parsing risposta auth-p7:", e);
         return { error: "Errore durante l'autenticazione. Riprova più tardi." };
       }
     }
