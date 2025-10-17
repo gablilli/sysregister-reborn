@@ -42,3 +42,7 @@ next-env.d.ts
 # userassets
 /public/userassets/banners/*
 /public/userassets/avatars/*
+
+# Docker data
+/data
+*.db.backup.*
