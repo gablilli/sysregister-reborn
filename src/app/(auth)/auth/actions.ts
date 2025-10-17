@@ -1,96 +1,69 @@
 "use server";
-import { handleAuthError } from "@/lib/api";
+
 import { db } from "@/lib/db";
-import { JSDOM } from "jsdom";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
-import { getUserDetailsFromToken } from "@/lib/utils";
-export async function getUserSession({ uid, pass }: { uid: string, pass: string }) {
-    if (!uid || !pass) {
-        return "Credenziali non valide.";
-    }
 
-    const formData = new FormData();
-    formData.append("uid", uid);
-    formData.append("pwd", pass);
-    const req = await fetch(`https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd`, {
-        method: "POST",
-        body: formData
+const API_HEADERS = {
+  "Content-Type": "application/json",
+  "User-Agent": "CVVS/std/4.1.7 Android/10",
+  "Z-Dev-Apikey": "Tg1NWEwNGIgIC0K",
+};
+
+export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
+  console.log("[getUserSession] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
+
+  if (!uid || !pass) {
+    console.error("[getUserSession] Credenziali mancanti o invalide");
+    return { error: "Credenziali non valide." };
+  }
+
+  try {
+    const resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+      method: "POST",
+      headers: API_HEADERS,
+      body: JSON.stringify({ ident: uid, password: pass, uid }),
     });
 
-    const setCookies = req.headers.get("set-cookie")?.split("; ");
-    const expiry = req.headers.get("expires");
-    const token = setCookies?.find(cookie => cookie.startsWith("PHPSESSID="))?.split("=")[1];
+    console.log("[getUserSession] response status:", resp.status);
 
-    if (!token || !expiry) {
-        return "Credenziali non valide.";
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error("[getUserSession] Errore durante il login:", errorText);
+      return { error: "Credenziali non valide.", details: errorText };
+    }
+
+    const { token, expire } = await resp.json();
+
+    console.log("[getUserSession] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
+
+    if (!token || !expire) {
+      console.error("[getUserSession] Token o data di scadenza mancanti");
+      return { error: "Credenziali non valide." };
     }
 
     const user = await db.user.upsert({
-        where: { id: uid },
-        create: { id: uid },
-        update: { id: uid }
+      where: { id: uid },
+      create: { id: uid },
+      update: { id: uid },
     });
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const alg = "HS256";
     const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
-        .setProtectedHeader({ alg })
-        .setIssuedAt()
-        .setExpirationTime("2h")
-        .sign(secret);
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("2h")
+      .sign(secret);
 
     cookies().set("internal_token", tokenJwt);
-    cookies().set("tokenExpiry", new Date(expiry).toISOString());
+    cookies().set("tokenExpiry", new Date(expire).toISOString());
     cookies().set("token", token);
-}
 
-export async function getUserDetails() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) {
-        return handleAuthError();
-    }
-    const page = await (await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
-        headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
-        },
-    })).text();
-    const dom = new JSDOM(page);
-    try {
-        const schoolName = dom.window.document.querySelector("span.scuola")?.textContent;
-        return {
-            schoolName
-        };
-    } catch {
-        return handleAuthError();
-    }
-}
+    console.log("[getUserSession] Token JWT generato e cookies impostati");
 
-export async function verifySession() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) {
-        return handleAuthError();
-    }
-    const page = await (await fetch("https://web.spaggiari.eu/home/app/default/menu_webinfoschool_genitori.php", {
-        headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
-        },
-    })).text();
-    const dom = new JSDOM(page);
-    try {
-        if (dom.window.document.querySelector("span.scuola")) {
-            const internalUser = await db.user.findUnique({
-                where: { id: userData.uid }
-            });
-            if (internalUser && internalUser.internalId === userData.internalId) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    } catch {
-        return false;
-    }
+    return { success: true, message: "Autenticazione riuscita." };
+  } catch (error) {
+    console.error("[getUserSession] Errore nella comunicazione con il server:", error);
+    return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+  }
 }

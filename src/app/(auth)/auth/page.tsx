@@ -7,14 +7,15 @@ import { useCallback, useEffect, useState } from "react";
 import { getUserSession } from "./actions";
 import { useRouter, useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
+
 export default function Page() {
   const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  function showError(error: string) {
-    setError(error);
+  function showError(errorMessage: string) {
+    setError(errorMessage);
     setLoading(false);
     setTimeout(() => {
       setError("");
@@ -39,8 +40,8 @@ export default function Page() {
             router.push("/");
           }
         }
-      } catch {
-        return;
+      } catch (err) {
+        showError("Si è verificato un errore durante l'accesso");
       }
       setLoading(false);
     },
@@ -84,7 +85,8 @@ export default function Page() {
       </div>
       <div className="flex-1 flex w-full px-6 items-center flex-col justify-end">
         <div className="p-4 px-0 w-full">
-          <InstallPWAPrompt /></div>
+          <InstallPWAPrompt />
+        </div>
         <form
           className="w-full"
           onSubmit={async (e) => {

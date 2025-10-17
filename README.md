@@ -6,6 +6,5 @@ SysRegister offered an improved web UI for the ClasseViva school register and ad
 
 ---
 
-### REVIVING SYSREGISTER
-#### REBORN VERSION OF SYSREGISTER. F7*CK CLASSEVIVA!
-
+### FORK FROM SYSREGISTER
+#### I'm reviving the beautiful SysRegister in this new fork! F7** Classeviva!

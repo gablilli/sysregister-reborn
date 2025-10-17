@@ -4,43 +4,68 @@ import { handleAuthError } from "@/lib/api";
 import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
 
+const API_HEADERS = {
+  "User-Agent": "zorro/1.0",
+  "Z-Dev-Apikey": "+zorro+",
+};
+
+async function getStudentIdFromToken(): Promise<string | null> {
+  const token = cookies().get("token")?.value;
+  if (!token) return null;
+
+  const res = await fetch("https://web.spaggiari.eu/rest/v1/users/me", {
+    headers: {
+      ...API_HEADERS,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) return null;
+
+  const json = await res.json();
+  return json?.ident || null;
+}
+
 export async function getBacheca() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) {
-        return handleAuthError();
-    }
-    const formData = new FormData();
-    formData.append("action", "get_comunicazioni");
-    const res = await fetch(`https://web.spaggiari.eu/sif/app/default/bacheca_personale.php`, {
-        method: "POST",
-        headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
-        },
-        body: formData
-    });
-    let data;
-    try {
-        data = await res.json();
-    } catch {
-        return handleAuthError();
-    }
-    return data;
+  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+  if (!userData) return handleAuthError();
+
+  const token = cookies().get("token")?.value;
+  const studentId = await getStudentIdFromToken();
+  if (!token || !studentId) return handleAuthError();
+
+  const res = await fetch(`https://web.spaggiari.eu/rest/v1/students/${studentId}/notes`, {
+    headers: {
+      ...API_HEADERS,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  try {
+    return await res.json();
+  } catch {
+    return handleAuthError();
+  }
 }
 
 export async function setReadBachecaItem(itemId: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
-    if (!userData) {
-        return handleAuthError();
+  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+  if (!userData) return handleAuthError();
+
+  const token = cookies().get("token")?.value;
+  const studentId = await getStudentIdFromToken();
+  if (!token || !studentId) return handleAuthError();
+
+  const res = await fetch(
+    `https://web.spaggiari.eu/rest/v1/students/${studentId}/notes/${itemId}/read`,
+    {
+      method: "PUT",
+      headers: {
+        ...API_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
     }
-    const formData = new FormData();
-    formData.append("action", "read_all");
-    formData.append("id_relazioni", `[${itemId}]`);
-    await fetch(`https://web.spaggiari.eu/sif/app/default/bacheca_personale.php`, {
-        method: "POST",
-        headers: {
-            "Cookie": `PHPSESSID=${cookies().get("token")?.value}; webidentity=${userData.uid};`,
-        },
-        body: formData
-    });
-    return true;
+  );
+
+  return res.ok;
 }
