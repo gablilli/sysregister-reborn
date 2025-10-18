@@ -13,6 +13,17 @@ export default function Page() {
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Returns true if url is a relative path starting with "/", and not with "//"
+  function isSafeRedirect(url: string | undefined | null): boolean {
+    return (
+      typeof url === "string" &&
+      url.startsWith("/") &&
+      !url.startsWith("//") &&
+      !url.startsWith("/\\") && // defensive for windows paths
+      !url.includes("://")     // disallow schemes
+    );
+  }
+
   function showError(errorMessage: string) {
     setError(errorMessage);
     setLoading(false);
@@ -40,12 +51,12 @@ export default function Page() {
         
         if (result.success && result.redirectTo) {
           console.log("[CLIENT] Login successful, redirecting to:", result.redirectTo);
-          // Use window.location for a full page reload to ensure cookies are properly set
-          window.location.href = result.redirectTo;
+          // Use window.location for a full page reload to ensure cookies are properly set, but only with validated paths
+          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/";
+          window.location.href = safeRedirect;
         } else {
           console.error("[CLIENT] Unexpected response:", result);
           showError("Si è verificato un errore durante l'accesso");
-          setLoading(false);
         }
       } catch (err) {
         console.error("[CLIENT] Exception during login:", err);
@@ -76,8 +87,9 @@ export default function Page() {
         
         if (result.success && result.redirectTo) {
           console.log("[CLIENT] Auto-login successful, redirecting to:", result.redirectTo);
-          // Use window.location for a full page reload to ensure cookies are properly set
-          window.location.href = result.redirectTo;
+          // Use window.location for a full page reload to ensure cookies are properly set, but only with validated paths
+          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/";
+          window.location.href = safeRedirect;
         } else {
           console.error("[CLIENT] Unexpected auto-login response:", result);
           setLoading(false);
