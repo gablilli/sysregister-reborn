@@ -184,6 +184,16 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
  * @param redirectTo - Optional redirect target (defaults to "/")
  * @returns Success object with redirect URL or error object if authentication fails
  */
+
+// Only allow a restricted set of safe redirect destinations
+const ALLOWED_REDIRECTS = ["/", "/dashboard", "/profile", "/account"];
+function sanitizeRedirect(redirectTo: string | undefined | null): string {
+  if (typeof redirectTo !== 'string') return "/";
+  // Only allow exact matches, not prefixes
+  if (ALLOWED_REDIRECTS.includes(redirectTo)) return redirectTo;
+  return "/";
+}
+
 export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string; pass: string; redirectTo?: string | null }) {
   console.log("[loginAndRedirect] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
 
@@ -284,8 +294,8 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
 
     console.log("[loginAndRedirect] Token JWT generato e cookies impostati, successo");
 
-    // Return success with redirect URL for client-side navigation
-    return { success: true, redirectTo: redirectTo || "/" };
+    // Return success with redirect URL for client-side navigation, but only allow safe destinations
+    return { success: true, redirectTo: sanitizeRedirect(redirectTo) };
   } catch (error) {
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
     return { error: "Errore durante l'autenticazione. Riprova più tardi." };
