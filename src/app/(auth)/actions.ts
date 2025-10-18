@@ -191,12 +191,12 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
  */
 
 // Only allow a restricted set of safe redirect destinations
-const ALLOWED_REDIRECTS = ["/", "/dashboard", "/profile", "/account"];
+const ALLOWED_REDIRECTS = ["/app", "/app/profile", "/app/register"];
 function sanitizeRedirect(redirectTo: string | undefined | null): string {
-  if (typeof redirectTo !== 'string') return "/";
+  if (typeof redirectTo !== 'string') return "/app";
   // Only allow exact matches, not prefixes
   if (ALLOWED_REDIRECTS.includes(redirectTo)) return redirectTo;
-  return "/";
+  return "/app";
 }
 
 export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string; pass: string; redirectTo?: string | null }) {

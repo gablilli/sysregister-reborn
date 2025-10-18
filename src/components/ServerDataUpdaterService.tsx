@@ -1,5 +1,5 @@
 "use client";
-import { setUserName, updateServerData } from "@/app/(main)/actions";
+import { setUserName, updateServerData } from "@/app/(app)/app/actions";
 import { useEffect, useState } from "react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "./ui/drawer";
 import { Button } from "./ui/button";

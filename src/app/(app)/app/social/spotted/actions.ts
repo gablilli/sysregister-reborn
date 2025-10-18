@@ -1,6 +1,6 @@
 "use server";
 
-import { verifySession } from "@/app/(auth)/auth/actions";
+import { verifySession } from "@/app/(auth)/actions";
 import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { hasPermission, PERMISSIONS } from "@/lib/perms";

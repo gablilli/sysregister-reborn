@@ -64,7 +64,7 @@ function MarksPageLink() {
   if (!marks.length || !periods.length || !periodsAverages || !totalAverage) return <MarksPageLinkLoading />;
   return (
     <Link
-      href={`/register/marks`}
+      href={`/app/register/marks`}
       className="rounded-xl flex flex-col overflow-hidden mb-4 relative p-4 py-3"
     >
       <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />

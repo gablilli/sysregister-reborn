@@ -1,7 +1,7 @@
 "use client";
 import { Notification } from "@/lib/types";
 import { useEffect, useState } from "react";
-import { getAllNotifications, setNotificationAsRead } from "@/app/(main)/actions";
+import { getAllNotifications, setNotificationAsRead } from "@/app/(app)/app/actions";
 import { BellDot, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import {
@@ -76,7 +76,7 @@ export default function NotificationSection() {
     // will be shown in the future
     return (
         <Link
-            href={`/notifications`}
+            href={`/app/notifications`}
             className="rounded-xl overflow-hidden mb-4 relative p-4 py-3 flex items-center justify-between"
         >
             <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
