@@ -4,15 +4,22 @@ import AuthIcon from "@/assets/icons/auth.svg";
 import Button from "@/components/Button";
 import { Input, InputLabel } from "@/components/Input";
 import { useCallback, useEffect, useState } from "react";
-import { getUserSession } from "./actions";
-import { useRouter, useSearchParams } from "next/navigation";
+import { loginAndRedirect } from "./actions";
+import { useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
+
+/**
+ * Checks if an error is a Next.js redirect (which is the expected behavior).
+ * Next.js uses throwing to implement redirects in server actions.
+ */
+function isNextRedirect(error: unknown): boolean {
+  return error instanceof Error && error.message?.includes("NEXT_REDIRECT");
+}
 
 export default function Page() {
   const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
 
   function showError(errorMessage: string) {
     setError(errorMessage);
@@ -29,47 +36,59 @@ export default function Page() {
       console.log("[CLIENT] Attempting login with uid:", uid);
       setLoading(true);
       try {
-        const result = await getUserSession({ uid, pass });
-        console.log("[CLIENT] Login result:", result);
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-        if (result && "error" in result && result.error) {
-          console.error("[CLIENT] Login error:", result.error);
-          showError(result.error);
-        } else {
-          console.log("[CLIENT] Login successful, redirecting...");
-          if (goTo) {
-            router.push(goTo);
-          } else {
-            router.push("/");
-          }
-        }
+        // Use loginAndRedirect which handles server-side redirect
+        await loginAndRedirect({ uid, pass, redirectTo: goTo });
+        // If we get here, there was an error (redirect would have thrown)
+        console.log("[CLIENT] Login completed without redirect - unexpected");
+        showError("Si è verificato un errore durante l'accesso");
       } catch (err) {
+        // Next.js redirect() throws a special error - this is expected on success
+        if (isNextRedirect(err)) {
+          console.log("[CLIENT] Redirecting after successful login");
+          return;
+        }
+        
         console.error("[CLIENT] Exception during login:", err);
         showError("Si è verificato un errore durante l'accesso");
+        setLoading(false);
       }
-      setLoading(false);
     },
-    [goTo, router]
+    [goTo]
+  );
+
+  const tryAutoSignIn = useCallback(
+    async () => {
+      const uid = localStorage.getItem("username");
+      const pass = localStorage.getItem("password");
+      if (!uid || !pass) return;
+      
+      console.log("[CLIENT] Attempting auto-login with uid:", uid);
+      setLoading(true);
+      try {
+        // Use loginAndRedirect for auto-login too
+        await loginAndRedirect({ uid, pass, redirectTo: goTo });
+      } catch (err) {
+        // Next.js redirect() throws a special error - this is expected on success
+        if (isNextRedirect(err)) {
+          console.log("[CLIENT] Auto-login successful, redirecting");
+          return;
+        }
+        
+        console.error("[CLIENT] Auto-login failed:", err);
+        // Don't show error for auto-login failure - just let user login manually
+        setLoading(false);
+      }
+    },
+    [goTo]
   );
 
   useEffect(() => {
-    async function doAutoAuth() {
-      const form = new FormData();
-      form.set(
-        "sysregister-username",
-        localStorage.getItem("username") as string
-      );
-      form.set(
-        "sysregister-password",
-        localStorage.getItem("password") as string
-      );
-      trySignIn(form);
-    }
     if (localStorage.getItem("username") && localStorage.getItem("password")) {
-      doAutoAuth();
+      tryAutoSignIn();
     }
-  }, [trySignIn]);
+  }, [tryAutoSignIn]);
 
   return (
     <div className="flex flex-col items-center justify-center h-svh">
