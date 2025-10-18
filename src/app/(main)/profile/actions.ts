@@ -12,7 +12,7 @@ import { getLeaderboard } from "../social/lb/actions";
 import { LeaderboardEntryType } from "../social/lb/page";
 
 export async function getUserData(userId?: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }
@@ -103,7 +103,7 @@ export async function getUserData(userId?: string) {
 }
 
 export async function followUser(userId: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }
@@ -124,7 +124,7 @@ export async function followUser(userId: string) {
 }
 
 export async function unfollowUser(userId: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }
@@ -141,7 +141,7 @@ export async function unfollowUser(userId: string) {
 }
 
 export async function updateBio(bio: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }
@@ -158,7 +158,7 @@ export async function updateBio(bio: string) {
 }
 
 export async function updateAvatar(base64Image: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }
@@ -187,7 +187,7 @@ export async function updateAvatar(base64Image: string) {
 }
 
 export async function updateBanner(base64Image: string) {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }

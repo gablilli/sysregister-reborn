@@ -12,9 +12,10 @@ const API_HEADERS = {
 
 export async function verifySession() {
   try {
-    const token = cookies().get("token")?.value;
-    const tokenExpiry = cookies().get("tokenExpiry")?.value;
-    const internal_token = cookies().get("internal_token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    const tokenExpiry = cookieStore.get("tokenExpiry")?.value;
+    const internal_token = cookieStore.get("internal_token")?.value;
 
     if (!token || !tokenExpiry || !internal_token) {
       return false;
@@ -39,7 +40,7 @@ export async function verifySession() {
  * @param tokenJwt - Internal JWT token for user identification
  */
 async function setAuthCookies(token: string, expire: string, tokenJwt: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set("internal_token", tokenJwt, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

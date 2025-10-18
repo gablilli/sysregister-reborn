@@ -1,7 +1,7 @@
 "use client";
 import { LessonType } from "@/lib/types";
 import { getDayLessons } from "../../actions";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useState } from "react";
 
 const formatDate = (dateString: string) => {
   const months = [
@@ -16,8 +16,8 @@ const formatDate = (dateString: string) => {
   return `${date.getDate()} ${months[date.getMonth()]}`;
 };
 
-const Page = ({ params }: { params: { day: string }; }) => {
-  const day = params.day;
+const Page = ({ params }: { params: Promise<{ day: string }>; }) => {
+  const { day } = use(params);
   const formattedDate = day ? formatDate(day) : '';
   const [lessonsData, setLessonsData] = useState<LessonType[]>([]);
 

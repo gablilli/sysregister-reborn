@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 
 export async function createPost({ content, feed, isAnon }: { content: string, feed?: string, isAnon?: boolean }) {
     try {
-        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
         if (!userData) {
             return handleAuthError();
         }
@@ -55,7 +55,7 @@ export async function createPost({ content, feed, isAnon }: { content: string, f
 
 export async function getNewPosts({ feed }: { feed?: string }) {
     try {
-        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
         if (!userData) {
             return handleAuthError();
         }
@@ -123,7 +123,7 @@ export async function getNewPosts({ feed }: { feed?: string }) {
 
 export async function getTopPosts({ feed }: { feed?: string }) {
     try {
-        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
         if (!userData) {
             return handleAuthError();
         }
@@ -194,7 +194,7 @@ export async function getTopPosts({ feed }: { feed?: string }) {
 
 export async function togglePostLike({ postId }: { postId: string }) {
     try {
-        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
         if (!userData) {
             return handleAuthError();
         }
@@ -259,7 +259,7 @@ export async function togglePostLike({ postId }: { postId: string }) {
 }
 export async function deletePost({ postId }: { postId: string }) {
     try {
-        const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+        const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
         if (!userData) {
             return handleAuthError();
         }
