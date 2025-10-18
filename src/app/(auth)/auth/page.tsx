@@ -8,14 +8,6 @@ import { loginAndRedirect } from "./actions";
 import { useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
 
-/**
- * Checks if an error is a Next.js redirect (which is the expected behavior).
- * Next.js uses throwing to implement redirects in server actions.
- */
-function isNextRedirect(error: unknown): boolean {
-  return error instanceof Error && error.message?.includes("NEXT_REDIRECT");
-}
-
 export default function Page() {
   const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
@@ -38,18 +30,24 @@ export default function Page() {
       try {
         localStorage.setItem("username", uid);
         localStorage.setItem("password", pass);
-        // Use loginAndRedirect which handles server-side redirect
-        await loginAndRedirect({ uid, pass, redirectTo: goTo });
-        // If we get here, there was an error (redirect would have thrown)
-        console.log("[CLIENT] Login completed without redirect - unexpected");
-        showError("Si è verificato un errore durante l'accesso");
-      } catch (err) {
-        // Next.js redirect() throws a special error - this is expected on success
-        if (isNextRedirect(err)) {
-          console.log("[CLIENT] Redirecting after successful login");
+        const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
+        
+        if (result.error) {
+          console.error("[CLIENT] Login failed:", result.error);
+          showError(result.error);
           return;
         }
         
+        if (result.success && result.redirectTo) {
+          console.log("[CLIENT] Login successful, redirecting to:", result.redirectTo);
+          // Use window.location for a full page reload to ensure cookies are properly set
+          window.location.href = result.redirectTo;
+        } else {
+          console.error("[CLIENT] Unexpected response:", result);
+          showError("Si è verificato un errore durante l'accesso");
+          setLoading(false);
+        }
+      } catch (err) {
         console.error("[CLIENT] Exception during login:", err);
         showError("Si è verificato un errore durante l'accesso");
         setLoading(false);
@@ -67,16 +65,25 @@ export default function Page() {
       console.log("[CLIENT] Attempting auto-login with uid:", uid);
       setLoading(true);
       try {
-        // Use loginAndRedirect for auto-login too
-        await loginAndRedirect({ uid, pass, redirectTo: goTo });
-      } catch (err) {
-        // Next.js redirect() throws a special error - this is expected on success
-        if (isNextRedirect(err)) {
-          console.log("[CLIENT] Auto-login successful, redirecting");
+        const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
+        
+        if (result.error) {
+          console.error("[CLIENT] Auto-login failed:", result.error);
+          // Don't show error for auto-login failure - just let user login manually
+          setLoading(false);
           return;
         }
         
-        console.error("[CLIENT] Auto-login failed:", err);
+        if (result.success && result.redirectTo) {
+          console.log("[CLIENT] Auto-login successful, redirecting to:", result.redirectTo);
+          // Use window.location for a full page reload to ensure cookies are properly set
+          window.location.href = result.redirectTo;
+        } else {
+          console.error("[CLIENT] Unexpected auto-login response:", result);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("[CLIENT] Exception during auto-login:", err);
         // Don't show error for auto-login failure - just let user login manually
         setLoading(false);
       }
