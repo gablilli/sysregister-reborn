@@ -67,7 +67,7 @@ All cookies now use proper security settings:
   secure: true,          // HTTPS only in production
   sameSite: "lax",       // CSRF protection
   path: "/",             // Available across entire site
-  maxAge: 60 * 60 * 2    // 2 hours expiration
+  maxAge: 60 * 60 * 2    // 2-hour expiration
 }
 ```
 
@@ -113,12 +113,12 @@ function isNextRedirect(error: unknown): boolean {
 ## Testing
 
 After deployment, verify:
-- [x] Manual login works without redirect loop
-- [x] Auto-login (saved credentials) works correctly
-- [x] Login with `goto` parameter redirects correctly
-- [x] Invalid credentials show error message
-- [x] Cookies are set with proper security flags
-- [x] Token expiration is handled correctly
+- [ ] Manual login works without redirect loop
+- [ ] Auto-login (saved credentials) works correctly
+- [ ] Login with `goto` parameter redirects correctly
+- [ ] Invalid credentials show error message
+- [ ] Cookies are set with proper security flags
+- [ ] Token expiration is handled correctly
 
 ## Migration Notes
 
