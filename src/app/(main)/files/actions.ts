@@ -10,7 +10,7 @@ const API_HEADERS = {
 };
 
 async function getStudentIdFromToken(): Promise<string | null> {
-  const token = cookies().get("token")?.value;
+  const token = (await cookies()).get("token")?.value;
   if (!token) return null;
 
   const res = await fetch("https://web.spaggiari.eu/rest/v1/users/me", {
@@ -27,10 +27,10 @@ async function getStudentIdFromToken(): Promise<string | null> {
 }
 
 export async function getBacheca() {
-  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+  const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
   if (!userData) return handleAuthError();
 
-  const token = cookies().get("token")?.value;
+  const token = (await cookies()).get("token")?.value;
   const studentId = await getStudentIdFromToken();
   if (!token || !studentId) return handleAuthError();
 
@@ -53,10 +53,10 @@ export async function setReadBachecaItem(itemId: string) {
   if(!/^[\w-]+$/.test(itemId)) {
     return handleAuthError();
   }
-  const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+  const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
   if (!userData) return handleAuthError();
 
-  const token = cookies().get("token")?.value;
+  const token = (await cookies()).get("token")?.value;
   const studentId = await getStudentIdFromToken();
   if (!token || !studentId) return handleAuthError();
 

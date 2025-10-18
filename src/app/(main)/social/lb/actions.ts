@@ -6,7 +6,7 @@ import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
 
 export async function getLeaderboard() {
-    const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
+    const userData = await getUserDetailsFromToken((await cookies()).get("internal_token")?.value || "");
     if (!userData) {
         return handleAuthError();
     }
