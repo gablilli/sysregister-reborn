@@ -33,6 +33,12 @@ export async function verifySession() {
   }
 }
 
+/**
+ * Sets authentication cookies with secure options.
+ * @param token - ClasseViva API token
+ * @param expire - Token expiration date string
+ * @param tokenJwt - Internal JWT token for user identification
+ */
 async function setAuthCookies(token: string, expire: string, tokenJwt: string) {
   const cookieStore = cookies();
   cookieStore.set("internal_token", tokenJwt, {
@@ -165,6 +171,21 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
   }
 }
 
+/**
+ * Authenticates user with ClasseViva API and performs server-side redirect.
+ * 
+ * This function handles the complete login flow:
+ * 1. Validates credentials with ClasseViva API
+ * 2. Creates/updates user in database
+ * 3. Sets authentication cookies
+ * 4. Redirects to the specified page
+ * 
+ * @param uid - User ID (ClasseViva username)
+ * @param pass - Password
+ * @param redirectTo - Optional redirect target (defaults to "/")
+ * @returns Error object if authentication fails, otherwise throws redirect
+ * @throws {RedirectError} On successful authentication (Next.js redirect behavior)
+ */
 export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string; pass: string; redirectTo?: string | null }) {
   console.log("[loginAndRedirect] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
 
@@ -264,13 +285,11 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
     await setAuthCookies(token, expire, tokenJwt);
 
     console.log("[loginAndRedirect] Token JWT generato e cookies impostati, reindirizzamento a:", redirectTo || "/");
-
-    // Use server-side redirect to avoid race condition with middleware
   } catch (error) {
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
     return { error: "Errore durante l'autenticazione. Riprova più tardi." };
   }
 
-  // Redirect outside try-catch as it throws
+  // Redirect outside try-catch as Next.js redirect() throws to perform the redirect
   redirect(redirectTo || "/");
 }

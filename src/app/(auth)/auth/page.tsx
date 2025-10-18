@@ -8,6 +8,14 @@ import { loginAndRedirect } from "./actions";
 import { useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
 
+/**
+ * Checks if an error is a Next.js redirect (which is the expected behavior).
+ * Next.js uses throwing to implement redirects in server actions.
+ */
+function isNextRedirect(error: unknown): boolean {
+  return error instanceof Error && error.message?.includes("NEXT_REDIRECT");
+}
+
 export default function Page() {
   const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
@@ -36,10 +44,8 @@ export default function Page() {
         console.log("[CLIENT] Login completed without redirect - unexpected");
         showError("Si è verificato un errore durante l'accesso");
       } catch (err) {
-        // In Next.js, redirect() throws a special error - check if it's a redirect
-        const error = err as Error;
-        if (error.message && error.message.includes("NEXT_REDIRECT")) {
-          // This is expected - redirect is happening
+        // Next.js redirect() throws a special error - this is expected on success
+        if (isNextRedirect(err)) {
           console.log("[CLIENT] Redirecting after successful login");
           return;
         }
@@ -64,10 +70,8 @@ export default function Page() {
         // Use loginAndRedirect for auto-login too
         await loginAndRedirect({ uid, pass, redirectTo: goTo });
       } catch (err) {
-        // In Next.js, redirect() throws a special error - check if it's a redirect
-        const error = err as Error;
-        if (error.message && error.message.includes("NEXT_REDIRECT")) {
-          // This is expected - redirect is happening
+        // Next.js redirect() throws a special error - this is expected on success
+        if (isNextRedirect(err)) {
           console.log("[CLIENT] Auto-login successful, redirecting");
           return;
         }
