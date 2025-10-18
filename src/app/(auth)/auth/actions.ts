@@ -3,7 +3,6 @@
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
-import { redirect } from "next/navigation";
 
 const API_HEADERS = {
   "Content-Type": "application/json",
@@ -172,19 +171,18 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
 }
 
 /**
- * Authenticates user with ClasseViva API and performs server-side redirect.
+ * Authenticates user with ClasseViva API and sets authentication cookies.
  * 
  * This function handles the complete login flow:
  * 1. Validates credentials with ClasseViva API
  * 2. Creates/updates user in database
  * 3. Sets authentication cookies
- * 4. Redirects to the specified page
+ * 4. Returns success response for client-side redirect
  * 
  * @param uid - User ID (ClasseViva username)
  * @param pass - Password
  * @param redirectTo - Optional redirect target (defaults to "/")
- * @returns Error object if authentication fails, otherwise throws redirect
- * @throws {RedirectError} On successful authentication (Next.js redirect behavior)
+ * @returns Success object with redirect URL or error object if authentication fails
  */
 export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string; pass: string; redirectTo?: string | null }) {
   console.log("[loginAndRedirect] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
@@ -284,12 +282,12 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
 
     await setAuthCookies(token, expire, tokenJwt);
 
-    console.log("[loginAndRedirect] Token JWT generato e cookies impostati, reindirizzamento a:", redirectTo || "/");
+    console.log("[loginAndRedirect] Token JWT generato e cookies impostati, successo");
+
+    // Return success with redirect URL for client-side navigation
+    return { success: true, redirectTo: redirectTo || "/" };
   } catch (error) {
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
     return { error: "Errore durante l'autenticazione. Riprova più tardi." };
   }
-
-  // Redirect outside try-catch as Next.js redirect() throws to perform the redirect
-  redirect(redirectTo || "/");
 }
