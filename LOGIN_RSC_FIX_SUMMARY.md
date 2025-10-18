@@ -73,15 +73,12 @@ Added `prefetch={false}` to all Link components in the Navbar:
 Updated `setAuthCookies` function to make the `secure` flag configurable:
 
 ```typescript
-const useSecureCookies = process.env.COOKIE_SECURE === 'true' || 
-  (process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false');
+const useSecureCookies = process.env.COOKIE_SECURE === 'true';
 ```
 
 **Logic**:
-- If `COOKIE_SECURE=true` → use secure cookies (for HTTPS)
-- If `COOKIE_SECURE=false` → don't use secure cookies (for HTTP)
-- If not set and in production → don't use secure (default safe for Docker HTTP)
-- If not set and in development → don't use secure
+- If `COOKIE_SECURE=true` → use secure cookies (for HTTPS deployments)
+- If `COOKIE_SECURE=false` or not set → don't use secure cookies (for HTTP, safe default)
 
 ### 3. Updated Docker Configuration
 

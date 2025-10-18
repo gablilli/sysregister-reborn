@@ -42,8 +42,8 @@ async function setAuthCookies(token: string, expire: string, tokenJwt: string) {
   const cookieStore = cookies();
   // In production, only use secure cookies if HTTPS is available
   // For Docker deployments without HTTPS, set COOKIE_SECURE=false in environment
-  const useSecureCookies = process.env.COOKIE_SECURE === 'true' || 
-    (process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false');
+  // Default to false for safety (works with both HTTP and HTTPS, though less secure over HTTP)
+  const useSecureCookies = process.env.COOKIE_SECURE === 'true';
   
   cookieStore.set("internal_token", tokenJwt, {
     httpOnly: true,
