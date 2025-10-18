@@ -40,7 +40,7 @@ export default function Page() {
       setLoading(true);
       try {
         localStorage.setItem("username", uid);
-        localStorage.setItem("password", pass);
+        // Password is sensitive; do not store in localStorage
         const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
         
         if (result.error) {
