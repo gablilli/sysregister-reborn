@@ -40,23 +40,28 @@ export async function verifySession() {
  */
 async function setAuthCookies(token: string, expire: string, tokenJwt: string) {
   const cookieStore = cookies();
+  // In production, only use secure cookies if HTTPS is available
+  // For Docker deployments without HTTPS, set COOKIE_SECURE=false in environment
+  // Default to false for safety (works with both HTTP and HTTPS, though less secure over HTTP)
+  const useSecureCookies = process.env.COOKIE_SECURE === 'true';
+  
   cookieStore.set("internal_token", tokenJwt, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 2, // 2 hours
   });
   cookieStore.set("tokenExpiry", new Date(expire).toISOString(), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 2, // 2 hours
   });
   cookieStore.set("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 2, // 2 hours

@@ -17,6 +17,10 @@ services:
       - NEXT_PUBLIC_POSTHOG_KEY=${NEXT_PUBLIC_POSTHOG_KEY:-}
       - NEXT_PUBLIC_POSTHOG_HOST=${NEXT_PUBLIC_POSTHOG_HOST:-}
       
+      # Cookies - Set to 'false' if not using HTTPS (e.g., local Docker deployment)
+      # Set to 'true' if behind an HTTPS reverse proxy
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      
       # Next.js settings
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0
