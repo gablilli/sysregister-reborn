@@ -49,6 +49,10 @@ export async function getBacheca() {
 }
 
 export async function setReadBachecaItem(itemId: string) {
+  // Only allow alphanumeric IDs and dashes (e.g., UUIDs). Adjust as needed for your use-case.
+  if(!/^[\w-]+$/.test(itemId)) {
+    return handleAuthError();
+  }
   const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
   if (!userData) return handleAuthError();
 
