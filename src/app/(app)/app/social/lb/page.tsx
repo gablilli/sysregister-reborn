@@ -107,7 +107,7 @@ function LeaderboardEntry({ rank, name, userInternalId, value, precision, single
         }
     });
     return (
-        <Link ref={entry} href={`/profile/${userInternalId}`}>
+        <Link ref={entry} href={`/app/profile/${userInternalId}`}>
             <div className={`flex min-h-[50px] ${isRequestingUser ? "border-2 border-accent" : ""} items-center relative overflow-hidden rounded-xl p-2 pr-4 justify-between`}>
                 <div className="bg-secondary -z-10 opacity-25 absolute top-0 bottom-0 left-0 right-0" />
                 <div className="flex items-center gap-4">

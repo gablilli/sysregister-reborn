@@ -187,7 +187,7 @@ function SubjectCard({ subject }: { subject: Subject }) {
     return ((6 * (count + 1)) - (average * count)).toFixed(2);
   }
   return (
-    <Link href={`/register/marks/${subject.name}`} className="relative flex gap-4 items-start justify-start overflow-hidden p-4 rounded-xl mb-4">
+    <Link href={`/app/register/marks/${subject.name}`} className="relative flex gap-4 items-start justify-start overflow-hidden p-4 rounded-xl mb-4">
       <div className="top-0 bottom-0 left-0 right-0 absolute -z-10 opacity-20 bg-secondary" />
       <div className="flex-shrink-0">
         {subject.marks && <Gauge value={parseFloat(getGradesAverage(subject.marks).toFixed(3))} size={80} />}

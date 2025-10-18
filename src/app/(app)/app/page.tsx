@@ -250,7 +250,7 @@ function LessonsPageLink({
 
   return (
     <Link
-      href={`/lessons/${day.getFullYear()}${(day.getMonth() + 1 < 10 ? "0" : "") + (day.getMonth() + 1)
+      href={`/app/lessons/${day.getFullYear()}${(day.getMonth() + 1 < 10 ? "0" : "") + (day.getMonth() + 1)
         }${day.getDate() < 10 ? "0" : ""}${day.getDate()}`}
       className="rounded-xl overflow-hidden mb-4 relative p-4 py-3 flex items-center justify-between"
     >

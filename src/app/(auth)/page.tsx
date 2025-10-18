@@ -52,7 +52,7 @@ export default function Page() {
         if (result.success && result.redirectTo) {
           console.log("[CLIENT] Login successful, redirecting to:", result.redirectTo);
           // Use window.location for a full page reload to ensure cookies are properly set, but only with validated paths
-          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/";
+          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/app";
           window.location.href = safeRedirect;
         } else {
           console.error("[CLIENT] Unexpected response:", result);
@@ -88,7 +88,7 @@ export default function Page() {
         if (result.success && result.redirectTo) {
           console.log("[CLIENT] Auto-login successful, redirecting to:", result.redirectTo);
           // Use window.location for a full page reload to ensure cookies are properly set, but only with validated paths
-          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/";
+          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/app";
           window.location.href = safeRedirect;
         } else {
           console.error("[CLIENT] Unexpected auto-login response:", result);

@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { getMarks, getPresence } from "./register/actions";
 import { getUserDetailsFromToken } from "@/lib/utils";
-import { verifySession } from "@/app/(auth)/auth/actions";
+import { verifySession } from "@/app/(auth)/actions";
 
 const API_BASE = "https://web.spaggiari.eu/rest/v1";
 const USER_AGENT = "CVVS/std/4.1.7 Android/10";

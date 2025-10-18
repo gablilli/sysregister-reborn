@@ -178,7 +178,7 @@ function SpotEntry({ post, tryUpdatePosts }: { post: Post, tryUpdatePosts: () =>
                         </Avatar>
                         <div>
                             {post.authorId ? (
-                                <Link href={`/profile/${post.authorId}`} className="flex items-center gap-1.5">
+                                <Link href={`/app/profile/${post.authorId}`} className="flex items-center gap-1.5">
                                     <p className="font-semibold">@{post.author?.name || "Anonimo"}</p>
                                     <PermsBadges permissions={post.author?.permissions || 0} />
                                 </Link>
