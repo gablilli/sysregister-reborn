@@ -30,7 +30,7 @@ Restructured the application routes to eliminate the redirect after login:
 
 1. **No immediate redirect needed**: When user logs in at `/`, they can stay on that page (which shows login form) or the redirect to `/app` happens with cookies already set
 2. **Middleware logic is simpler**: 
-   - `/app/*` routes require authentication → redirect to `/` if not authenticated
+   - `/app/*` routes require authentication; redirect to `/` if not authenticated
    - `/` route shows login if not authenticated, redirects to `/app` if already authenticated
 3. **Cookies are properly available**: The full page reload to `/app` after login ensures cookies are sent with the request
 
@@ -178,6 +178,11 @@ If you're running this application:
 
 2. **Rebuild the application:**
    ```bash
+   # Modern Docker Compose (recommended)
+   docker compose down
+   docker compose up -d --build
+   
+   # Or using legacy docker-compose
    docker-compose down
    docker-compose up -d --build
    ```
