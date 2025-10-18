@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
+import { redirect } from "next/navigation";
 
 const API_HEADERS = {
   "Content-Type": "application/json",
@@ -30,6 +31,31 @@ export async function verifySession() {
     console.error("[verifySession] Errore nella verifica della sessione:", error);
     return false;
   }
+}
+
+async function setAuthCookies(token: string, expire: string, tokenJwt: string) {
+  const cookieStore = cookies();
+  cookieStore.set("internal_token", tokenJwt, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 2, // 2 hours
+  });
+  cookieStore.set("tokenExpiry", new Date(expire).toISOString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 2, // 2 hours
+  });
+  cookieStore.set("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 2, // 2 hours
+  });
 }
 
 export async function getUserSession({ uid, pass }: { uid: string; pass: string }) {
@@ -128,9 +154,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
       .setExpirationTime("2h")
       .sign(secret);
 
-    cookies().set("internal_token", tokenJwt);
-    cookies().set("tokenExpiry", new Date(expire).toISOString());
-    cookies().set("token", token);
+    await setAuthCookies(token, expire, tokenJwt);
 
     console.log("[getUserSession] Token JWT generato e cookies impostati");
 
@@ -139,4 +163,114 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     console.error("[getUserSession] Errore nella comunicazione con il server:", error);
     return { error: "Errore durante l'autenticazione. Riprova più tardi." };
   }
+}
+
+export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string; pass: string; redirectTo?: string | null }) {
+  console.log("[loginAndRedirect] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
+
+  if (!uid || !pass) {
+    console.error("[loginAndRedirect] Credenziali mancanti o invalide");
+    return { error: "Credenziali non valide." };
+  }
+
+  try {
+    let token: string | null = null;
+    let expire: string | null = null;
+    let restV1Error: string | null = null;
+    
+    // Try the REST v1 endpoint first (known to work)
+    console.log("[loginAndRedirect] Tentativo con endpoint REST v1");
+    let resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+      method: "POST",
+      headers: API_HEADERS,
+      body: JSON.stringify({ ident: null, pass: pass, uid: uid }),
+    });
+
+    console.log("[loginAndRedirect] response status:", resp.status);
+    
+    // Log response text for debugging
+    const responseText = await resp.text();
+    console.log("[loginAndRedirect] response body:", responseText);
+
+    if (resp.ok) {
+      try {
+        const responseData = JSON.parse(responseText);
+        token = responseData.token || null;
+        expire = responseData.expire || null;
+      } catch (e) {
+        console.warn("[loginAndRedirect] Errore parsing risposta REST v1:", e);
+      }
+    } else {
+      restV1Error = responseText;
+      console.error("[loginAndRedirect] REST v1 failed with status:", resp.status, "body:", responseText);
+    }
+
+    // If the REST v1 endpoint fails or doesn't return valid data, try the new auth-p7 endpoint
+    if (!token || !expire) {
+      console.log("[loginAndRedirect] Tentativo con nuovo endpoint auth-p7");
+      resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({ uid, pass }),
+      });
+
+      console.log("[loginAndRedirect] auth-p7 response status:", resp.status);
+
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error("[loginAndRedirect] Errore durante il login:", errorText);
+        
+        // If both endpoints failed, check if it's geo-blocking
+        if (errorText.includes("Access Denied") || (restV1Error && restV1Error.includes("Access Denied"))) {
+          return { 
+            error: "Accesso bloccato dal server ClasseViva. L'applicazione potrebbe essere geo-bloccata quando deployata su Vercel.", 
+            details: errorText 
+          };
+        }
+        
+        return { error: "Credenziali non valide.", details: errorText };
+      }
+
+      try {
+        const responseData = await resp.json();
+        token = responseData.token || responseData.data?.token || null;
+        expire = responseData.expire || responseData.data?.expire || null;
+      } catch (e) {
+        console.error("[loginAndRedirect] Errore parsing risposta auth-p7:", e);
+        return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+      }
+    }
+
+    console.log("[loginAndRedirect] token e expire ricevuti:", { token: token ? "OK" : "Mancante", expire });
+
+    if (!token || !expire || typeof token !== 'string' || typeof expire !== 'string') {
+      console.error("[loginAndRedirect] Token o data di scadenza mancanti o non validi");
+      return { error: "Credenziali non valide." };
+    }
+
+    const user = await db.user.upsert({
+      where: { id: uid },
+      create: { id: uid },
+      update: { id: uid },
+    });
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const tokenJwt = await new SignJWT({ uid, internalId: user.internalId })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("2h")
+      .sign(secret);
+
+    await setAuthCookies(token, expire, tokenJwt);
+
+    console.log("[loginAndRedirect] Token JWT generato e cookies impostati, reindirizzamento a:", redirectTo || "/");
+
+    // Use server-side redirect to avoid race condition with middleware
+  } catch (error) {
+    console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
+    return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+  }
+
+  // Redirect outside try-catch as it throws
+  redirect(redirectTo || "/");
 }
