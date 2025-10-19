@@ -39,7 +39,12 @@ export default function NotificationSection() {
         fetchNotifications();
     }, []);
     async function tryReadNotification(id: string) {
-        await setNotificationAsRead({ notificationId: id });
+        const result = await setNotificationAsRead({ notificationId: id });
+        if (result === null) {
+            // Auth error - redirect to login
+            window.location.href = "/";
+            return;
+        }
         const readNotifications = JSON.parse(window.localStorage.getItem("read_notifications") || "[]");
         readNotifications.push(id);
         setNotifications((prevNotifications) => prevNotifications?.filter(notification => notification.id !== id));

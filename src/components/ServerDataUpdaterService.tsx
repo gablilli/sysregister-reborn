@@ -38,9 +38,14 @@ function UsernameDrawer() {
             setError("L'username non può essere vuoto.");
             return;
         }
-        const error = await setUserName(username);
-        if (error) {
-            setError(error);
+        const result = await setUserName(username);
+        if (result === null) {
+            // Auth error - redirect to login
+            window.location.href = "/";
+            return;
+        }
+        if (result) {
+            setError(result);
             setLoading(false);
             return;
         } else {
