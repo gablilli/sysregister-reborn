@@ -21,6 +21,10 @@ services:
       # Set to 'true' if behind an HTTPS reverse proxy
       - COOKIE_SECURE=${COOKIE_SECURE:-false}
       
+      # App URL - Used for self-referential calls (e.g., server-side rendering calling own API)
+      # Set to your domain in production (e.g., https://yourdomain.com)
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      
       # Next.js settings
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0

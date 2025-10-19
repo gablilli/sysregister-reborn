@@ -67,8 +67,10 @@ The SQLite database file (`database.db`) is stored in the `./data` directory on 
 ### Environment Variables
 
 - **JWT_SECRET** (Required): Secret key for JWT token generation. Must be at least 32 characters.
+- **NEXT_PUBLIC_APP_URL** (Optional): The URL where the application is accessible. Used for server-side rendering calling own API routes. Defaults to `http://localhost:3000`. Set to your domain in production (e.g., `https://yourdomain.com`).
 - **NEXT_PUBLIC_POSTHOG_KEY** (Optional): PostHog analytics key
 - **NEXT_PUBLIC_POSTHOG_HOST** (Optional): PostHog analytics host
+- **COOKIE_SECURE** (Optional): Set to `false` for local development or Docker without HTTPS, `true` when behind an HTTPS reverse proxy. Defaults to `false`.
 
 ### Ports
 
