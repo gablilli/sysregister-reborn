@@ -27,25 +27,39 @@ export default function Page() {
       const pass = formData.get("sysregister-password") as string;
       console.log("[CLIENT] Attempting login with uid:", uid);
       setLoading(true);
+      
       try {
         localStorage.setItem("username", uid);
-        // Password is sensitive; do not store in localStorage
-        const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
         
-        if (result?.error) {
-          console.error("[CLIENT] Login failed:", result.error);
-          showError(result.error);
+        // Call server action - it will set cookies but not return a response
+        // This avoids Next.js server action response issues in Docker
+        await loginAndRedirect({ uid, pass });
+        
+        // Check for error cookie
+        const authError = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('auth_error='))
+          ?.split('=')[1];
+        
+        if (authError) {
+          console.error("[CLIENT] Login failed with error:", authError);
+          showError(decodeURIComponent(authError));
           return;
         }
         
-        if (result?.success && result?.redirectTo) {
-          console.log("[CLIENT] Login successful, redirecting to:", result.redirectTo);
-          // Small delay to ensure cookies are fully set before navigation
-          // This prevents race conditions where middleware checks run before cookies are available
-          await new Promise(resolve => setTimeout(resolve, 100));
-          window.location.href = result.redirectTo;
+        // Check for auth cookies to verify success
+        const hasToken = document.cookie.includes('token=');
+        const hasInternalToken = document.cookie.includes('internal_token=');
+        
+        if (hasToken && hasInternalToken) {
+          console.log("[CLIENT] Login successful, redirecting to app");
+          // Success - redirect to app
+          const redirectTo = goTo && ["/app", "/app/profile", "/app/register"].includes(goTo) 
+            ? goTo 
+            : "/app";
+          window.location.href = redirectTo;
         } else {
-          console.error("[CLIENT] Unexpected response:", result);
+          console.error("[CLIENT] Login failed - no auth cookies found");
           showError("Si è verificato un errore durante l'accesso");
           setLoading(false);
         }

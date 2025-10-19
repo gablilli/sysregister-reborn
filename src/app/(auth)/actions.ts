@@ -179,33 +179,27 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
 /**
  * Authenticates user with ClasseViva API and sets authentication cookies.
  * 
- * This function handles the complete login flow:
+ * Simplified approach to avoid Next.js server action response issues in Docker:
  * 1. Validates credentials with ClasseViva API
  * 2. Creates/updates user in database
- * 3. Sets authentication cookies
- * 4. Returns success for client-side redirect (with delay to ensure cookie propagation)
+ * 3. Sets authentication cookies (or error cookie)
+ * 4. Returns void - client checks cookies to determine success/failure
  * 
  * @param uid - User ID (ClasseViva username)
  * @param pass - Password
- * @param redirectTo - Optional redirect target (defaults to "/app")
- * @returns Success object with redirect URL or error object if authentication fails
  */
-
-// Only allow a restricted set of safe redirect destinations
-const ALLOWED_REDIRECTS = ["/app", "/app/profile", "/app/register"];
-function sanitizeRedirect(redirectTo: string | undefined | null): string {
-  if (typeof redirectTo !== 'string') return "/app";
-  // Only allow exact matches, not prefixes
-  if (ALLOWED_REDIRECTS.includes(redirectTo)) return redirectTo;
-  return "/app";
-}
-
-export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string; pass: string; redirectTo?: string | null }) {
+export async function loginAndRedirect({ uid, pass }: { uid: string; pass: string }) {
   console.log("[loginAndRedirect] ricevo credenziali:", { uid, pass: pass ? "***" : pass });
 
   if (!uid || !pass) {
     console.error("[loginAndRedirect] Credenziali mancanti o invalide");
-    return { error: "Credenziali non valide." };
+    // Set error cookie instead of returning
+    cookies().set("auth_error", "Credenziali non valide.", {
+      httpOnly: false, // Allow client to read it
+      maxAge: 5, // 5 seconds
+      path: "/",
+    });
+    return;
   }
 
   try {
@@ -255,15 +249,18 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
         const errorText = await resp.text();
         console.error("[loginAndRedirect] Errore durante il login:", errorText);
         
-        // If both endpoints failed, check if it's geo-blocking
+        // Set error cookie instead of returning
+        let errorMsg = "Credenziali non valide.";
         if (errorText.includes("Access Denied") || (restV1Error && restV1Error.includes("Access Denied"))) {
-          return { 
-            error: "Accesso bloccato dal server ClasseViva. L'applicazione potrebbe essere geo-bloccata quando deployata su Vercel.", 
-            details: errorText 
-          };
+          errorMsg = "Accesso bloccato dal server ClasseViva.";
         }
         
-        return { error: "Credenziali non valide.", details: errorText };
+        cookies().set("auth_error", errorMsg, {
+          httpOnly: false,
+          maxAge: 5,
+          path: "/",
+        });
+        return;
       }
 
       try {
@@ -272,7 +269,12 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
         expire = responseData.expire || responseData.data?.expire || null;
       } catch (e) {
         console.error("[loginAndRedirect] Errore parsing risposta auth-p7:", e);
-        return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+        cookies().set("auth_error", "Errore durante l'autenticazione. Riprova più tardi.", {
+          httpOnly: false,
+          maxAge: 5,
+          path: "/",
+        });
+        return;
       }
     }
 
@@ -280,7 +282,12 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
 
     if (!token || !expire || typeof token !== 'string' || typeof expire !== 'string') {
       console.error("[loginAndRedirect] Token o data di scadenza mancanti o non validi");
-      return { error: "Credenziali non valide." };
+      cookies().set("auth_error", "Credenziali non valide.", {
+        httpOnly: false,
+        maxAge: 5,
+        path: "/",
+      });
+      return;
     }
 
     const user = await db.user.upsert({
@@ -300,12 +307,14 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
 
     console.log("[loginAndRedirect] Token JWT generato e cookies impostati, successo");
 
-    // Return success with redirect URL for client-side navigation
-    // Using client-side redirect with a small delay to ensure cookies are fully propagated
-    // This avoids Docker RSC payload fetch issues while ensuring cookie availability
-    return { success: true, redirectTo: sanitizeRedirect(redirectTo) };
+    // Don't return anything - cookies are enough to signal success
+    // The client will redirect by checking for cookies
   } catch (error) {
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
-    return { error: "Errore durante l'autenticazione. Riprova più tardi." };
+    cookies().set("auth_error", "Errore durante l'autenticazione. Riprova più tardi.", {
+      httpOnly: false,
+      maxAge: 5,
+      path: "/",
+    });
   }
 }
