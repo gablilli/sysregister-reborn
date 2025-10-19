@@ -182,11 +182,11 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
  * 1. Validates credentials with ClasseViva API
  * 2. Creates/updates user in database
  * 3. Sets authentication cookies
- * 4. Returns success response for client-side redirect
+ * 4. Returns success for client-side redirect (with delay to ensure cookie propagation)
  * 
  * @param uid - User ID (ClasseViva username)
  * @param pass - Password
- * @param redirectTo - Optional redirect target (defaults to "/")
+ * @param redirectTo - Optional redirect target (defaults to "/app")
  * @returns Success object with redirect URL or error object if authentication fails
  */
 
@@ -299,7 +299,9 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
 
     console.log("[loginAndRedirect] Token JWT generato e cookies impostati, successo");
 
-    // Return success with redirect URL for client-side navigation, but only allow safe destinations
+    // Return success with redirect URL for client-side navigation
+    // Using client-side redirect with a small delay to ensure cookies are fully propagated
+    // This avoids Docker RSC payload fetch issues while ensuring cookie availability
     return { success: true, redirectTo: sanitizeRedirect(redirectTo) };
   } catch (error) {
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
