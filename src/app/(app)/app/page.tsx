@@ -69,24 +69,28 @@ export default function Home() {
       } else {
         setAgendaLoading(true);
         const agenda = await getDayAgenda(selectedDay);
-        const completedAgenda = JSON.parse(
-          localStorage.getItem("completedAgenda") || "[]"
-        );
-        const updatedAgenda: AgendaItemType[] = agenda.map(
-          (item: AgendaItemType) => ({
-            ...item,
-            completed: completedAgenda.includes(Number(item.id)),
-          })
-        );
-        setAgenda(updatedAgenda);
-        window.sessionStorage.setItem("agenda", JSON.stringify({ agenda: updatedAgenda, day: selectedDay }));
+        if (agenda && Array.isArray(agenda)) {
+          const completedAgenda = JSON.parse(
+            localStorage.getItem("completedAgenda") || "[]"
+          );
+          const updatedAgenda: AgendaItemType[] = agenda.map(
+            (item: AgendaItemType) => ({
+              ...item,
+              completed: completedAgenda.includes(Number(item.id)),
+            })
+          );
+          setAgenda(updatedAgenda);
+          window.sessionStorage.setItem("agenda", JSON.stringify({ agenda: updatedAgenda, day: selectedDay }));
+        }
         setAgendaLoading(false);
       }
     }
 
     async function fetchLessons() {
       const lessons = await getDayLessons(selectedDay);
-      setLessons(lessons);
+      if (lessons && Array.isArray(lessons)) {
+        setLessons(lessons as LessonType[]);
+      }
     }
 
     fetchDayAgenda();

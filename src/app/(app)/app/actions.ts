@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { getMarks, getPresence } from "./register/actions";
 import { getUserDetailsFromToken } from "@/lib/utils";
 import { verifySession } from "@/app/(auth)/actions";
+import { robustFetchJson } from "@/lib/fetch";
 
 const API_BASE = "https://web.spaggiari.eu/rest/v1";
 const USER_AGENT = "CVVS/std/4.1.7 Android/10";
@@ -26,13 +27,10 @@ async function getUserDetails() {
   if (!token) return null;
 
   try {
-    const res = await fetch(`${API_BASE}/users/me`, {
+    const data = await robustFetchJson<{ school?: { name?: string }; schoolName?: string }>(`${API_BASE}/users/me`, {
       headers: getHeaders(token),
     });
 
-    if (!res.ok) return null;
-
-    const data = await res.json();
     return {
       schoolName: data?.school?.name || data?.schoolName || null,
     };
@@ -54,22 +52,16 @@ export async function getDayAgenda(date: Date) {
   const start = new Date(date.setHours(0, 0, 0, 0)).toISOString();
   const end = new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
-  const res = await fetch(`${API_BASE}/agenda/student?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`, {
-    method: "GET",
-    headers: getHeaders(token),
-  });
-
-  if (!res.ok) return handleAuthError();
-
-  let data;
   try {
-    data = await res.json();
+    const data = await robustFetchJson<AgendaItemType[]>(`${API_BASE}/agenda/student?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`, {
+      method: "GET",
+      headers: getHeaders(token),
+    });
     // Filtra solo note (tipo === "nota")
-    data = data.filter((item: AgendaItemType) => item.tipo === "nota");
+    return data.filter((item: AgendaItemType) => item.tipo === "nota");
   } catch {
     return handleAuthError();
   }
-  return data;
 }
 
 export async function getDayLessons(date: Date) {
@@ -82,21 +74,15 @@ export async function getDayLessons(date: Date) {
 
   const formattedDate = date.toISOString().split("T")[0];
 
-  const res = await fetch(`${API_BASE}/lessons/student?date=${formattedDate}`, {
-    method: "GET",
-    headers: getHeaders(token),
-  });
-
-  if (!res.ok) return handleAuthError();
-
-  let data;
   try {
-    const json = await res.json();
-    data = json.data || [];
+    const json = await robustFetchJson<{ data?: unknown[] }>(`${API_BASE}/lessons/student?date=${formattedDate}`, {
+      method: "GET",
+      headers: getHeaders(token),
+    });
+    return json.data || [];
   } catch {
     return handleAuthError();
   }
-  return data;
 }
 
 // SERVER-DATA-SECTION

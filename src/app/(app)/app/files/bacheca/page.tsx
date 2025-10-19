@@ -28,7 +28,7 @@ export default function Page() {
             if (storedBacheca) {
                 setBacheca(JSON.parse(storedBacheca));
             } else {
-                const res: BachecaResponse = await getBacheca();
+                const res = await getBacheca() as BachecaResponse;
                 setBacheca(res);
                 window.sessionStorage.setItem('bacheca', JSON.stringify(res));
             }
