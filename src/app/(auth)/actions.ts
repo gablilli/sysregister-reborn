@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
+import { robustFetch } from "@/lib/fetch";
 
 const API_HEADERS = {
   "Content-Type": "application/json",
@@ -83,7 +84,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     
     // Try the REST v1 endpoint first (known to work)
     console.log("[getUserSession] Tentativo con endpoint REST v1");
-    let resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+    let resp = await robustFetch("https://web.spaggiari.eu/rest/v1/auth/login", {
       method: "POST",
       headers: API_HEADERS,
       body: JSON.stringify({ ident: null, pass: pass, uid: uid }),
@@ -111,7 +112,7 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
     // If the REST v1 endpoint fails or doesn't return valid data, try the new auth-p7 endpoint
     if (!token || !expire) {
       console.log("[getUserSession] Tentativo con nuovo endpoint auth-p7");
-      resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
+      resp = await robustFetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
         method: "POST",
         headers: API_HEADERS,
         body: JSON.stringify({ uid, pass }),
@@ -214,7 +215,7 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
     
     // Try the REST v1 endpoint first (known to work)
     console.log("[loginAndRedirect] Tentativo con endpoint REST v1");
-    let resp = await fetch("https://web.spaggiari.eu/rest/v1/auth/login", {
+    let resp = await robustFetch("https://web.spaggiari.eu/rest/v1/auth/login", {
       method: "POST",
       headers: API_HEADERS,
       body: JSON.stringify({ ident: null, pass: pass, uid: uid }),
@@ -242,7 +243,7 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
     // If the REST v1 endpoint fails or doesn't return valid data, try the new auth-p7 endpoint
     if (!token || !expire) {
       console.log("[loginAndRedirect] Tentativo con nuovo endpoint auth-p7");
-      resp = await fetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
+      resp = await robustFetch("https://web.spaggiari.eu/auth-p7/app/default/AuthApi4.php?a=aLoginPwd", {
         method: "POST",
         headers: API_HEADERS,
         body: JSON.stringify({ uid, pass }),

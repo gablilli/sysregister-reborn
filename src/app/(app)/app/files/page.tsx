@@ -23,7 +23,7 @@ export default function Page() {
         setBacheca(JSON.parse(storedBacheca));
         setBachecaLoading(false);
       } else {
-        const res: BachecaResponse = await getBacheca();
+        const res = await getBacheca() as BachecaResponse;
         sessionStorage.setItem('bacheca', JSON.stringify(res));
         setBacheca(res);
         setBachecaLoading(false);

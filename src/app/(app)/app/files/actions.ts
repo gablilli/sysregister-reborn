@@ -3,6 +3,7 @@
 import { handleAuthError } from "@/lib/api";
 import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
+import { robustFetch, robustFetchJson } from "@/lib/fetch";
 
 const API_HEADERS = {
   "User-Agent": "zorro/1.0",
@@ -13,17 +14,17 @@ async function getStudentIdFromToken(): Promise<string | null> {
   const token = cookies().get("token")?.value;
   if (!token) return null;
 
-  const res = await fetch("https://web.spaggiari.eu/rest/v1/users/me", {
-    headers: {
-      ...API_HEADERS,
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) return null;
-
-  const json = await res.json();
-  return json?.ident || null;
+  try {
+    const json = await robustFetchJson<{ ident?: string }>("https://web.spaggiari.eu/rest/v1/users/me", {
+      headers: {
+        ...API_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return json?.ident || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getBacheca() {
@@ -34,15 +35,13 @@ export async function getBacheca() {
   const studentId = await getStudentIdFromToken();
   if (!token || !studentId) return handleAuthError();
 
-  const res = await fetch(`https://web.spaggiari.eu/rest/v1/students/${studentId}/notes`, {
-    headers: {
-      ...API_HEADERS,
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
   try {
-    return await res.json();
+    return await robustFetchJson<{ read: unknown[]; msg_new: unknown[] }>(`https://web.spaggiari.eu/rest/v1/students/${studentId}/notes`, {
+      headers: {
+        ...API_HEADERS,
+        Authorization: `Bearer ${token}`,
+      },
+    });
   } catch {
     return handleAuthError();
   }
@@ -60,16 +59,19 @@ export async function setReadBachecaItem(itemId: string) {
   const studentId = await getStudentIdFromToken();
   if (!token || !studentId) return handleAuthError();
 
-  const res = await fetch(
-    `https://web.spaggiari.eu/rest/v1/students/${studentId}/notes/${itemId}/read`,
-    {
-      method: "PUT",
-      headers: {
-        ...API_HEADERS,
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  return res.ok;
+  try {
+    const res = await robustFetch(
+      `https://web.spaggiari.eu/rest/v1/students/${studentId}/notes/${itemId}/read`,
+      {
+        method: "PUT",
+        headers: {
+          ...API_HEADERS,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

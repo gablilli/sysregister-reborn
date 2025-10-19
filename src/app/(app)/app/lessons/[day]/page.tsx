@@ -31,7 +31,10 @@ const Page = ({ params }: { params: { day: string }; }) => {
         new Date().getMinutes(),
         new Date().getSeconds()
       );
-      setLessonsData((await getDayLessons(date)));
+      const data = await getDayLessons(date);
+      if (data && Array.isArray(data)) {
+        setLessonsData(data as LessonType[]);
+      }
     }
     getLessonData();
   }, [day]);
