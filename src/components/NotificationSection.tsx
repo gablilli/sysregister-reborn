@@ -25,6 +25,11 @@ export default function NotificationSection() {
             const readNotifications = JSON.parse(window.localStorage.getItem("read_notifications") || "[]");
             setNotifications(JSON.parse(window.sessionStorage.getItem("notifications") || "[]").filter((notification: Notification) => !readNotifications.includes(notification.id)));
             const notifications = await getAllNotifications();
+            if (notifications === null) {
+                // Auth error - redirect to login
+                window.location.href = "/";
+                return;
+            }
             if (notifications && notifications.length > 0) {
                 const unreadNotifications = notifications.filter(notification => !readNotifications.includes(notification.id));
                 setNotifications(unreadNotifications);

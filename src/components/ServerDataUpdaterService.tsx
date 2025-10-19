@@ -11,6 +11,11 @@ export function ServerDataUpdaterService() {
     useEffect(() => {
         async function callServerUpdater() {
             const result = await updateServerData();
+            if (result === null) {
+                // Auth error - redirect to login
+                window.location.href = "/";
+                return;
+            }
             setResultCode(result as string);
         }
         callServerUpdater();
