@@ -151,19 +151,19 @@ The 150ms delay gives the browser time to process the Set-Cookie headers before 
    ↓
 3. robustFetch throws exception (network error)
    ↓
-4. Server catch block sets auth_error cookie
+4. Server catch block tries to set auth_error cookie (wrapped in try-catch)
    ↓
 5. Server returns void
    ↓
 6. Next.js forwards response to client (may fail in Docker)
    ↓
-7. Client catches any exception
+7. Client catches any exception (from step 6)
    ↓
-8. Client waits 150ms
+8. Client waits 150ms for cookie propagation
    ↓
 9. Client checks document.cookie
    ↓
-10. Client finds auth_error cookie
+10. Client finds auth_error cookie (if step 4 succeeded)
     ↓
 11. Client displays error message to user
 ```
