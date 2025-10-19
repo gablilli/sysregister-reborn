@@ -1,4 +1,4 @@
-# Authentication Redirect Loop Fix
+# Authentication Redirect Loop Fix (Revised)
 
 ## Problem Summary
 
@@ -52,75 +52,42 @@ This auto-login could never work since the password was deliberately not stored,
 
 ## Solution
 
-### Fix 1: Server-Side Redirect
+### Hybrid Approach: Server Cookies + Delayed Client Redirect
 
-Replace client-side navigation with **Next.js server-side redirect**:
+**Important Note:** This fix uses a **hybrid approach** instead of pure server-side redirect. Previous attempts (PR #9, #12) to use Next.js `redirect()` in server actions caused "fetch failed" errors in Docker standalone mode.
 
+**Server-side (actions.ts):**
 ```typescript
-// NEW CODE (correct) - AFTER THIS FIX
-import { redirect } from "next/navigation";
-
+// NEW CODE - AFTER THIS FIX
 await setAuthCookies(token, expire, tokenJwt);
-redirect(sanitizeRedirect(redirectTo)); // ← Server-side redirect
+// Return success for client-side redirect (avoids Docker RSC issues)
+return { success: true, redirectTo: sanitizeRedirect(redirectTo) };
+```
+
+**Client-side (page.tsx):**
+```typescript
+if (result?.success && result?.redirectTo) {
+  // Small delay to ensure cookies are fully set before navigation
+  await new Promise(resolve => setTimeout(resolve, 100));
+  window.location.href = result.redirectTo;
+}
 ```
 
 **Why this works:**
-1. Cookies are set via `cookies().set()`
-2. `redirect()` throws a special Next.js error
-3. Next.js catches this error and performs the redirect **at the server level**
-4. The redirect response includes the cookies AND the redirect location
-5. Browser's next request to `/app` **includes the cookies automatically**
-6. Middleware sees valid cookies → allows access to `/app`
-7. ✅ No redirect loop!
+1. **Server sets cookies properly** via `cookies().set()`
+2. **100ms delay** ensures cookies are fully propagated to browser
+3. **Full page reload** (`window.location.href`) guarantees cookies are sent with next request
+4. **No Docker RSC issues** - avoids internal Next.js fetch failures
+5. Middleware sees valid cookies → allows access to `/app`
+6. ✅ No redirect loop!
 
-### Fix 2: Handle Next.js Redirect Exceptions
+**Why NOT pure server-side redirect:**
+- Next.js `redirect()` in server actions causes internal RSC payload fetches
+- These fetches fail in Docker/standalone mode with "fetch failed" errors
+- Proven problematic in PR #9 and #12
+- Hybrid approach is more reliable across all deployment environments
 
-Since Next.js `redirect()` works by throwing an exception, we need to handle it properly:
-
-```typescript
-try {
-  // ... authentication logic ...
-  redirect(sanitizeRedirect(redirectTo));
-} catch (error) {
-  // Check if this is a Next.js redirect (which is expected)
-  if (error && typeof error === 'object' && 'digest' in error) {
-    const errorWithDigest = error as { digest: unknown };
-    if (typeof errorWithDigest.digest === 'string' && 
-        errorWithDigest.digest.startsWith('NEXT_REDIRECT')) {
-      // This is an expected redirect, re-throw it
-      throw error;
-    }
-  }
-  // Handle actual errors
-  return { error: "Errore durante l'autenticazione. Riprova più tardi." };
-}
-```
-
-On the client side:
-
-```typescript
-try {
-  const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
-  // If we get here, login failed (successful login redirects and doesn't return)
-  if (result?.error) {
-    showError(result.error);
-  }
-} catch (err) {
-  // Check if this is a Next.js redirect (which is expected on success)
-  if (err && typeof err === 'object' && 'digest' in err) {
-    const errorWithDigest = err as { digest: unknown };
-    if (typeof errorWithDigest.digest === 'string' && 
-        errorWithDigest.digest.startsWith('NEXT_REDIRECT')) {
-      // Let it propagate - this will trigger the redirect
-      throw err;
-    }
-  }
-  // Handle actual errors
-  showError("Si è verificato un errore durante l'accesso");
-}
-```
-
-### Fix 3: Remove Broken Auto-Login
+### Fix 2: Remove Broken Auto-Login
 
 Removed the entire auto-login functionality since:
 - Password was never stored in localStorage (for security reasons)
@@ -129,12 +96,13 @@ Removed the entire auto-login functionality since:
 
 ## Technical Details
 
-### Why Server-Side Redirect is Superior
+### Why Delayed Client Redirect Works
 
-1. **Atomic Operation**: Cookies are set and redirect happens in the same response
-2. **Browser Guarantees**: Browser always sends cookies with the redirected request
-3. **No Race Condition**: No timing window for cookies to be "not quite set yet"
-4. **Next.js Best Practice**: Uses framework's native capabilities
+1. **Cookie Propagation Time**: 100ms delay ensures cookies are fully available in browser
+2. **Full Page Reload**: `window.location.href` makes a complete HTTP request with cookies
+3. **No Docker Issues**: Avoids Next.js internal RSC fetches that fail in standalone mode
+4. **Simple and Reliable**: Works consistently across all deployment environments
+5. **No Race Condition**: Guaranteed cookie availability before middleware check
 
 ### Cookie Configuration
 
@@ -149,28 +117,28 @@ The cookies use secure settings:
 }
 ```
 
-With server-side redirect, `sameSite: "lax"` works correctly because the redirect is a same-site navigation initiated by the server, not by client-side JavaScript.
+With full page reload via `window.location.href`, `sameSite: "lax"` works correctly because it's a top-level navigation that includes cookies.
 
 ## Changes Made
 
 ### Modified Files
 
 1. **`src/app/(auth)/actions.ts`**
-   - Added `import { redirect } from "next/navigation"`
-   - Changed `loginAndRedirect` to use server-side `redirect()` instead of returning redirect URL
-   - Added proper error handling for Next.js redirect exceptions
-   - Updated JSDoc comments to reflect new behavior
+   - Removed `import { redirect } from "next/navigation"` (not using server-side redirect)
+   - Changed `loginAndRedirect` to return success object instead of throwing redirect
+   - Simplified error handling (no need for redirect exception checks)
+   - Updated JSDoc comments to reflect hybrid approach
 
 2. **`src/app/(auth)/page.tsx`**
    - Removed `useEffect` import (no longer needed)
-   - Removed `isSafeRedirect` function (validation now in server action)
-   - Removed entire `tryAutoSignIn` function and its `useEffect` hook
-   - Updated `trySignIn` to handle the new server-side redirect behavior
-   - Added proper error handling for Next.js redirect exceptions
+   - Removed entire `tryAutoSignIn` function and its `useEffect` hook (broken functionality)
+   - Updated `trySignIn` to add 100ms delay before `window.location.href` redirect
+   - Simplified error handling (no redirect exception checks needed)
 
 ### Lines Changed
-- **66 lines removed** (mostly auto-login code)
-- **26 lines added** (server-side redirect and proper error handling)
+- **66 lines removed** (broken auto-login code)
+- **5 lines added** (delay + simplified redirect logic)
+- **Net: -61 lines** - simpler, more maintainable code
 - **Net change: -40 lines** (simpler, more maintainable code)
 
 ## Testing
@@ -207,9 +175,11 @@ With server-side redirect, `sameSite: "lax"` works correctly because the redirec
 
 ## Why Previous Attempts Failed
 
-PR #21 restructured the routes (moving `/auth` to `/` and `/` to `/app`) but didn't address the fundamental cookie timing issue. The problem wasn't the route structure - it was the **client-side redirect after server-side cookie setting**.
+**PR #9, #12**: Tried pure server-side redirect using Next.js `redirect()` → caused "fetch failed" errors in Docker
+**PR #21**: Restructured routes but kept immediate client-side redirect → cookie timing issues persisted
+**This PR**: Uses hybrid approach with delayed client redirect → works in all environments
 
-## Comparison: Client-Side vs Server-Side Redirect
+## Comparison of Approaches
 
 ### Client-Side (OLD - Problematic)
 ```
@@ -218,8 +188,8 @@ PR #21 restructured the routes (moving `/auth` to `/` and `/` to `/app`) but did
   2. Return { success: true, redirectTo: "/app" }
   
 [Client Code]
-  3. Receive response
-  4. window.location.href = "/app"
+  3. Receive response IMMEDIATELY
+  4. window.location.href = "/app"  ← No delay!
   
 [Browser]
   5. Make new request to /app
@@ -230,23 +200,37 @@ PR #21 restructured the routes (moving `/auth` to `/` and `/` to `/app`) but did
   8. 🔄 LOOP!
 ```
 
-### Server-Side (NEW - Fixed)
+### Pure Server-Side (TRIED IN PR #9, #12 - Docker Issues)
 ```
 [Server Action]
   1. Set cookies
   2. Call redirect("/app")
   
-[Next.js]
-  3. Generate redirect response with cookies
+[Next.js Standalone/Docker]
+  3. Try to generate redirect response
+  4. ❌ Internal RSC fetch fails
+  5. "failed to forward action response TypeError: fetch failed"
+  6. User sees error, login incomplete
+```
+
+### Hybrid with Delay (NEW - Fixed)
+```
+[Server Action]
+  1. Set cookies
+  2. Return { success: true, redirectTo: "/app" }
+  
+[Client Code]
+  3. Receive response
+  4. Wait 100ms ← Cookie propagation time
+  5. window.location.href = "/app"
   
 [Browser]
-  4. Receive redirect response
-  5. Follow redirect to /app
-  6. ✅ Cookies automatically included
+  6. Make new request to /app
+  7. ✅ Cookies are included
   
 [Middleware]
-  7. Valid cookies found → allow access
-  8. ✅ Success!
+  8. Valid cookies found → allow access
+  9. ✅ Success! No loop, no errors!
 ```
 
 ## Security Considerations

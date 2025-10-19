@@ -32,23 +32,24 @@ export default function Page() {
         // Password is sensitive; do not store in localStorage
         const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
         
-        // If we get here, login failed (successful login redirects server-side and doesn't return)
         if (result?.error) {
           console.error("[CLIENT] Login failed:", result.error);
           showError(result.error);
+          return;
+        }
+        
+        if (result?.success && result?.redirectTo) {
+          console.log("[CLIENT] Login successful, redirecting to:", result.redirectTo);
+          // Small delay to ensure cookies are fully set before navigation
+          // This prevents race conditions where middleware checks run before cookies are available
+          await new Promise(resolve => setTimeout(resolve, 100));
+          window.location.href = result.redirectTo;
         } else {
           console.error("[CLIENT] Unexpected response:", result);
           showError("Si è verificato un errore durante l'accesso");
+          setLoading(false);
         }
       } catch (err) {
-        // Check if this is a Next.js redirect (which is expected on success)
-        if (err && typeof err === 'object' && 'digest' in err) {
-          const errorWithDigest = err as { digest: unknown };
-          if (typeof errorWithDigest.digest === 'string' && errorWithDigest.digest.startsWith('NEXT_REDIRECT')) {
-            // This is an expected redirect, let it propagate
-            throw err;
-          }
-        }
         console.error("[CLIENT] Exception during login:", err);
         showError("Si è verificato un errore durante l'accesso");
         setLoading(false);
