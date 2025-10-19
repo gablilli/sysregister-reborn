@@ -2,7 +2,7 @@
 
 ## Problem Summary
 
-Despite the restructuring done in PR #21, the authentication redirect loop issue persisted. Users reported that after logging in:
+Despite the restructuring done in [PR #21](https://github.com/gablilli/sysregister-reborn/pull/21), the authentication redirect loop issue persisted. Users reported that after logging in:
 1. Credentials are validated successfully
 2. Cookies are set on the server
 3. Client-side redirect to `/app` occurs
@@ -17,7 +17,7 @@ Despite the restructuring done in PR #21, the authentication redirect loop issue
 The fundamental problem was using **client-side navigation after server-side cookie setting**:
 
 ```typescript
-// OLD CODE (problematic)
+// OLD CODE (problematic) - BEFORE THIS FIX
 await setAuthCookies(token, expire, tokenJwt);
 return { success: true, redirectTo: "/app" };
 
@@ -37,10 +37,10 @@ This is a **browser timing issue** where the `Set-Cookie` headers are received b
 
 ### Issue 2: Non-functional Auto-Login
 
-The code had an auto-login feature that tried to read credentials from localStorage:
+The code had an auto-login feature that tried to read credentials from localStorage. **This is the OLD CODE that has been removed:**
 
 ```typescript
-// OLD CODE (broken)
+// OLD CODE (broken) - THIS WAS REMOVED
 const pass = localStorage.getItem("password"); // ← Never stored!
 
 // Earlier in code:
@@ -48,7 +48,7 @@ localStorage.setItem("username", uid);
 // Password is sensitive; do not store in localStorage ← Comment says it all
 ```
 
-This auto-login could never work since the password was deliberately not stored, adding unnecessary complexity.
+This auto-login could never work since the password was deliberately not stored, adding unnecessary complexity. **This entire feature has been removed in this fix.**
 
 ## Solution
 
@@ -57,7 +57,7 @@ This auto-login could never work since the password was deliberately not stored,
 Replace client-side navigation with **Next.js server-side redirect**:
 
 ```typescript
-// NEW CODE (correct)
+// NEW CODE (correct) - AFTER THIS FIX
 import { redirect } from "next/navigation";
 
 await setAuthCookies(token, expire, tokenJwt);
