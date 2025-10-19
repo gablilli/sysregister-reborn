@@ -36,27 +36,35 @@ export function ProfilePage({ userId }: { userId?: string }) {
     const [userData, setUserData] = useState<InternalUserData | null>(null);
 
     const fetchUserData = useCallback(async () => {
-        const user = (await getUserData(userId)) || null;
-        if (user) {
-            setUserData({
-                internalId: user.internalId ?? null,
-                lastServerDataUpdate: user.lastServerDataUpdate ?? new Date(),
-                name: user.name ?? null,
-                school: user.school ?? null,
-                average: user.average ?? null,
-                absencesHours: user.absencesHours ?? null,
-                delays: user.delays ?? null,
-                permissions: user.permissions ?? 0,
-                bio: user.bio ?? null,
-                likeCount: user.likeCount ?? null,
-                averageRank: user.averageRank ?? null,
-                absencesRank: user.absencesRank ?? null,
-                delaysRank: user.delaysRank ?? null,
-                followersRank: user.followersRank ?? null,
-                followCount: user.followCount ?? null,
-                isFollowed: user.isFollowed ?? false,
-            });
+        const user = await getUserData(userId);
+        if (!user) {
+            // null or undefined - auth error, will be handled by middleware redirect
+            return;
         }
+        // Check if server action returned a redirect instruction
+        if ('shouldRedirect' in user && typeof user.shouldRedirect === 'string') {
+            window.location.href = user.shouldRedirect;
+            return;
+        }
+        // Now TypeScript knows user is the full user object
+        setUserData({
+            internalId: user.internalId ?? null,
+            lastServerDataUpdate: user.lastServerDataUpdate ?? new Date(),
+            name: user.name ?? null,
+            school: user.school ?? null,
+            average: user.average ?? null,
+            absencesHours: user.absencesHours ?? null,
+            delays: user.delays ?? null,
+            permissions: user.permissions ?? 0,
+            bio: user.bio ?? null,
+            likeCount: user.likeCount ?? null,
+            averageRank: user.averageRank ?? null,
+            absencesRank: user.absencesRank ?? null,
+            delaysRank: user.delaysRank ?? null,
+            followersRank: user.followersRank ?? null,
+            followCount: user.followCount ?? null,
+            isFollowed: user.isFollowed ?? false,
+        });
     }, [userId]);
 
     useEffect(() => {

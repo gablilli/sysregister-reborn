@@ -5,7 +5,6 @@ import { handleAuthError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { getUserDetailsFromToken } from "@/lib/utils";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import path from 'path';
 import sharp from 'sharp';
 import { getLeaderboard } from "../social/lb/actions";
@@ -17,7 +16,8 @@ export async function getUserData(userId?: string) {
         return handleAuthError();
     }
     if (userId == userData.internalId) {
-        redirect("/profile");
+        // Return special value to indicate client should redirect to /profile
+        return { shouldRedirect: "/profile" };
     }
     if (!(await verifySession())) {
         return handleAuthError();

@@ -36,6 +36,11 @@ function MarksPageLink() {
         setPeriods(JSON.parse(periodsStore));
       } else {
         const fullData = await getMarksAndPeriods();
+        if (fullData === null) {
+          // Auth error - redirect to login
+          window.location.href = "/";
+          return;
+        }
         if (fullData) {
           setMarks(fullData.marks || []);
           setPeriods(fullData.periods || []);

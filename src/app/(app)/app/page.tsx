@@ -69,6 +69,11 @@ export default function Home() {
       } else {
         setAgendaLoading(true);
         const agenda = await getDayAgenda(selectedDay);
+        if (agenda === null) {
+          // Auth error - redirect to login
+          window.location.href = "/";
+          return;
+        }
         if (agenda && Array.isArray(agenda)) {
           const completedAgenda = JSON.parse(
             localStorage.getItem("completedAgenda") || "[]"
@@ -88,6 +93,11 @@ export default function Home() {
 
     async function fetchLessons() {
       const lessons = await getDayLessons(selectedDay);
+      if (lessons === null) {
+        // Auth error - redirect to login
+        window.location.href = "/";
+        return;
+      }
       if (lessons && Array.isArray(lessons)) {
         setLessons(lessons as LessonType[]);
       }

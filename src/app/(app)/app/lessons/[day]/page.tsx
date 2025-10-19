@@ -32,6 +32,11 @@ const Page = ({ params }: { params: { day: string }; }) => {
         new Date().getSeconds()
       );
       const data = await getDayLessons(date);
+      if (data === null) {
+        // Auth error - redirect to login
+        window.location.href = "/";
+        return;
+      }
       if (data && Array.isArray(data)) {
         setLessonsData(data as LessonType[]);
       }
