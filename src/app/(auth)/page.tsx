@@ -33,38 +33,43 @@ export default function Page() {
         
         // Call server action - it will set cookies but not return a response
         // This avoids Next.js server action response issues in Docker
+        // Note: In Docker, this may throw "failed to forward action response" but cookies are still set
         await loginAndRedirect({ uid, pass });
-        
-        // Check for error cookie
-        const authError = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('auth_error='))
-          ?.split('=')[1];
-        
-        if (authError) {
-          console.error("[CLIENT] Login failed with error:", authError);
-          showError(decodeURIComponent(authError));
-          return;
-        }
-        
-        // Check for auth cookies to verify success
-        const hasToken = document.cookie.includes('token=');
-        const hasInternalToken = document.cookie.includes('internal_token=');
-        
-        if (hasToken && hasInternalToken) {
-          console.log("[CLIENT] Login successful, redirecting to app");
-          // Success - redirect to app
-          const redirectTo = goTo && ["/app", "/app/profile", "/app/register"].includes(goTo) 
-            ? goTo 
-            : "/app";
-          window.location.href = redirectTo;
-        } else {
-          console.error("[CLIENT] Login failed - no auth cookies found");
-          showError("Si è verificato un errore durante l'accesso");
-          setLoading(false);
-        }
       } catch (err) {
-        console.error("[CLIENT] Exception during login:", err);
+        // Even if the server action throws (e.g., "failed to forward action response"),
+        // the cookies might have been set successfully on the server
+        console.warn("[CLIENT] Server action threw exception (may be normal in Docker):", err);
+      }
+      
+      // Small delay to ensure cookies are propagated from server to client
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Check for error cookie
+      const authError = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('auth_error='))
+        ?.split('=')[1];
+      
+      if (authError) {
+        console.error("[CLIENT] Login failed with error:", authError);
+        showError(decodeURIComponent(authError));
+        setLoading(false);
+        return;
+      }
+      
+      // Check for auth cookies to verify success
+      const hasToken = document.cookie.includes('token=');
+      const hasInternalToken = document.cookie.includes('internal_token=');
+      
+      if (hasToken && hasInternalToken) {
+        console.log("[CLIENT] Login successful, redirecting to app");
+        // Success - redirect to app
+        const redirectTo = goTo && ["/app", "/app/profile", "/app/register"].includes(goTo) 
+          ? goTo 
+          : "/app";
+        window.location.href = redirectTo;
+      } else {
+        console.error("[CLIENT] Login failed - no auth cookies found");
         showError("Si è verificato un errore durante l'accesso");
         setLoading(false);
       }

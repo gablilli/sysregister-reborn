@@ -194,11 +194,15 @@ export async function loginAndRedirect({ uid, pass }: { uid: string; pass: strin
   if (!uid || !pass) {
     console.error("[loginAndRedirect] Credenziali mancanti o invalide");
     // Set error cookie instead of returning
-    cookies().set("auth_error", "Credenziali non valide.", {
-      httpOnly: false, // Allow client to read it
-      maxAge: 5, // 5 seconds
-      path: "/",
-    });
+    try {
+      cookies().set("auth_error", "Credenziali non valide.", {
+        httpOnly: false, // Allow client to read it
+        maxAge: 5, // 5 seconds
+        path: "/",
+      });
+    } catch (cookieError) {
+      console.error("[loginAndRedirect] Errore impostando cookie di errore:", cookieError);
+    }
     return;
   }
 
@@ -255,11 +259,15 @@ export async function loginAndRedirect({ uid, pass }: { uid: string; pass: strin
           errorMsg = "Accesso bloccato dal server ClasseViva.";
         }
         
-        cookies().set("auth_error", errorMsg, {
-          httpOnly: false,
-          maxAge: 5,
-          path: "/",
-        });
+        try {
+          cookies().set("auth_error", errorMsg, {
+            httpOnly: false,
+            maxAge: 5,
+            path: "/",
+          });
+        } catch (cookieError) {
+          console.error("[loginAndRedirect] Errore impostando cookie di errore:", cookieError);
+        }
         return;
       }
 
@@ -269,11 +277,15 @@ export async function loginAndRedirect({ uid, pass }: { uid: string; pass: strin
         expire = responseData.expire || responseData.data?.expire || null;
       } catch (e) {
         console.error("[loginAndRedirect] Errore parsing risposta auth-p7:", e);
-        cookies().set("auth_error", "Errore durante l'autenticazione. Riprova più tardi.", {
-          httpOnly: false,
-          maxAge: 5,
-          path: "/",
-        });
+        try {
+          cookies().set("auth_error", "Errore durante l'autenticazione. Riprova più tardi.", {
+            httpOnly: false,
+            maxAge: 5,
+            path: "/",
+          });
+        } catch (cookieError) {
+          console.error("[loginAndRedirect] Errore impostando cookie di errore:", cookieError);
+        }
         return;
       }
     }
@@ -282,11 +294,15 @@ export async function loginAndRedirect({ uid, pass }: { uid: string; pass: strin
 
     if (!token || !expire || typeof token !== 'string' || typeof expire !== 'string') {
       console.error("[loginAndRedirect] Token o data di scadenza mancanti o non validi");
-      cookies().set("auth_error", "Credenziali non valide.", {
-        httpOnly: false,
-        maxAge: 5,
-        path: "/",
-      });
+      try {
+        cookies().set("auth_error", "Credenziali non valide.", {
+          httpOnly: false,
+          maxAge: 5,
+          path: "/",
+        });
+      } catch (cookieError) {
+        console.error("[loginAndRedirect] Errore impostando cookie di errore:", cookieError);
+      }
       return;
     }
 
@@ -309,12 +325,18 @@ export async function loginAndRedirect({ uid, pass }: { uid: string; pass: strin
 
     // Don't return anything - cookies are enough to signal success
     // The client will redirect by checking for cookies
+    return;
   } catch (error) {
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
-    cookies().set("auth_error", "Errore durante l'autenticazione. Riprova più tardi.", {
-      httpOnly: false,
-      maxAge: 5,
-      path: "/",
-    });
+    try {
+      cookies().set("auth_error", "Errore durante l'autenticazione. Riprova più tardi.", {
+        httpOnly: false,
+        maxAge: 5,
+        path: "/",
+      });
+    } catch (cookieError) {
+      console.error("[loginAndRedirect] Errore impostando cookie di errore:", cookieError);
+    }
+    return;
   }
 }
