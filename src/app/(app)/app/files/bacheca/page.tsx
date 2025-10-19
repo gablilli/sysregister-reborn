@@ -28,8 +28,13 @@ export default function Page() {
             if (storedBacheca) {
                 setBacheca(JSON.parse(storedBacheca));
             } else {
-                const res = await getBacheca() as BachecaResponse;
-                setBacheca(res);
+                const res = await getBacheca();
+                if (res === null) {
+                    // Auth error - redirect to login
+                    window.location.href = "/";
+                    return;
+                }
+                setBacheca(res as BachecaResponse);
                 window.sessionStorage.setItem('bacheca', JSON.stringify(res));
             }
             setBachecaLoading(false);

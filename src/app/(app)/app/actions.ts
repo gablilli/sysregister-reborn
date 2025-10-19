@@ -86,7 +86,7 @@ export async function getDayLessons(date: Date) {
 }
 
 // SERVER-DATA-SECTION
-export async function getAllNotifications(): Promise<Notification[] | void> {
+export async function getAllNotifications(): Promise<Notification[] | null> {
   const userData = await getUserDetailsFromToken(cookies().get("internal_token")?.value || "");
   if (!userData) {
     return handleAuthError();

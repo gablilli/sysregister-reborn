@@ -23,9 +23,14 @@ export default function Page() {
         setBacheca(JSON.parse(storedBacheca));
         setBachecaLoading(false);
       } else {
-        const res = await getBacheca() as BachecaResponse;
+        const res = await getBacheca();
+        if (res === null) {
+          // Auth error - redirect to login
+          window.location.href = "/";
+          return;
+        }
         sessionStorage.setItem('bacheca', JSON.stringify(res));
-        setBacheca(res);
+        setBacheca(res as BachecaResponse);
         setBachecaLoading(false);
       }
     }
