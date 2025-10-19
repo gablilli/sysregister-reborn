@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
+import { redirect } from "next/navigation";
 
 const API_HEADERS = {
   "Content-Type": "application/json",
@@ -182,12 +183,12 @@ export async function getUserSession({ uid, pass }: { uid: string; pass: string 
  * 1. Validates credentials with ClasseViva API
  * 2. Creates/updates user in database
  * 3. Sets authentication cookies
- * 4. Returns success response for client-side redirect
+ * 4. Performs server-side redirect to avoid cookie timing issues
  * 
  * @param uid - User ID (ClasseViva username)
  * @param pass - Password
- * @param redirectTo - Optional redirect target (defaults to "/")
- * @returns Success object with redirect URL or error object if authentication fails
+ * @param redirectTo - Optional redirect target (defaults to "/app")
+ * @returns Error object if authentication fails, otherwise redirects
  */
 
 // Only allow a restricted set of safe redirect destinations
@@ -299,9 +300,18 @@ export async function loginAndRedirect({ uid, pass, redirectTo }: { uid: string;
 
     console.log("[loginAndRedirect] Token JWT generato e cookies impostati, successo");
 
-    // Return success with redirect URL for client-side navigation, but only allow safe destinations
-    return { success: true, redirectTo: sanitizeRedirect(redirectTo) };
+    // Use server-side redirect to avoid cookie timing issues
+    // This ensures cookies are set before the redirect happens
+    redirect(sanitizeRedirect(redirectTo));
   } catch (error) {
+    // Check if the error is from Next.js redirect (which throws to perform the redirect)
+    if (error && typeof error === 'object' && 'digest' in error) {
+      const errorWithDigest = error as { digest: unknown };
+      if (typeof errorWithDigest.digest === 'string' && errorWithDigest.digest.startsWith('NEXT_REDIRECT')) {
+        // This is an expected redirect, re-throw it
+        throw error;
+      }
+    }
     console.error("[loginAndRedirect] Errore nella comunicazione con il server:", error);
     return { error: "Errore durante l'autenticazione. Riprova più tardi." };
   }

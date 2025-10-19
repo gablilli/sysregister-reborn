@@ -3,7 +3,7 @@ import Image from "next/legacy/image";
 import AuthIcon from "@/assets/icons/auth.svg";
 import Button from "@/components/Button";
 import { Input, InputLabel } from "@/components/Input";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { loginAndRedirect } from "./actions";
 import { useSearchParams } from "next/navigation";
 import InstallPWAPrompt from "@/components/InstallPWAPrompt";
@@ -12,17 +12,6 @@ export default function Page() {
   const goTo = useSearchParams().get("goto");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
-  // Returns true if url is a relative path starting with "/", and not with "//"
-  function isSafeRedirect(url: string | undefined | null): boolean {
-    return (
-      typeof url === "string" &&
-      url.startsWith("/") &&
-      !url.startsWith("//") &&
-      !url.startsWith("/\\") && // defensive for windows paths
-      !url.includes("://")     // disallow schemes
-    );
-  }
 
   function showError(errorMessage: string) {
     setError(errorMessage);
@@ -43,22 +32,23 @@ export default function Page() {
         // Password is sensitive; do not store in localStorage
         const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
         
-        if (result.error) {
+        // If we get here, login failed (successful login redirects server-side and doesn't return)
+        if (result?.error) {
           console.error("[CLIENT] Login failed:", result.error);
           showError(result.error);
-          return;
-        }
-        
-        if (result.success && result.redirectTo) {
-          console.log("[CLIENT] Login successful, redirecting to:", result.redirectTo);
-          // Use window.location for a full page reload to ensure cookies are properly set, but only with validated paths
-          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/app";
-          window.location.href = safeRedirect;
         } else {
           console.error("[CLIENT] Unexpected response:", result);
           showError("Si è verificato un errore durante l'accesso");
         }
       } catch (err) {
+        // Check if this is a Next.js redirect (which is expected on success)
+        if (err && typeof err === 'object' && 'digest' in err) {
+          const errorWithDigest = err as { digest: unknown };
+          if (typeof errorWithDigest.digest === 'string' && errorWithDigest.digest.startsWith('NEXT_REDIRECT')) {
+            // This is an expected redirect, let it propagate
+            throw err;
+          }
+        }
         console.error("[CLIENT] Exception during login:", err);
         showError("Si è verificato un errore durante l'accesso");
         setLoading(false);
@@ -67,47 +57,7 @@ export default function Page() {
     [goTo]
   );
 
-  const tryAutoSignIn = useCallback(
-    async () => {
-      const uid = localStorage.getItem("username");
-      const pass = localStorage.getItem("password");
-      if (!uid || !pass) return;
-      
-      console.log("[CLIENT] Attempting auto-login with uid:", uid);
-      setLoading(true);
-      try {
-        const result = await loginAndRedirect({ uid, pass, redirectTo: goTo });
-        
-        if (result.error) {
-          console.error("[CLIENT] Auto-login failed:", result.error);
-          // Don't show error for auto-login failure - just let user login manually
-          setLoading(false);
-          return;
-        }
-        
-        if (result.success && result.redirectTo) {
-          console.log("[CLIENT] Auto-login successful, redirecting to:", result.redirectTo);
-          // Use window.location for a full page reload to ensure cookies are properly set, but only with validated paths
-          const safeRedirect = isSafeRedirect(result.redirectTo) ? result.redirectTo : "/app";
-          window.location.href = safeRedirect;
-        } else {
-          console.error("[CLIENT] Unexpected auto-login response:", result);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error("[CLIENT] Exception during auto-login:", err);
-        // Don't show error for auto-login failure - just let user login manually
-        setLoading(false);
-      }
-    },
-    [goTo]
-  );
 
-  useEffect(() => {
-    if (localStorage.getItem("username") && localStorage.getItem("password")) {
-      tryAutoSignIn();
-    }
-  }, [tryAutoSignIn]);
 
   return (
     <div className="flex flex-col items-center justify-center h-svh">
