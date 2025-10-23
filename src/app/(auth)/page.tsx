@@ -36,6 +36,7 @@ export default function Page() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "same-origin", // Ensure cookies are received from response
           body: JSON.stringify({ uid, pass }),
         });
 
@@ -53,6 +54,9 @@ export default function Page() {
           const redirectTo = goTo && ["/app", "/app/profile", "/app/register"].includes(goTo) 
             ? goTo 
             : "/app";
+          
+          // Small delay to ensure cookies are fully set in browser before redirect
+          await new Promise(resolve => setTimeout(resolve, 150));
           window.location.href = redirectTo;
         } else {
           console.error("[CLIENT] Login failed - unexpected response");

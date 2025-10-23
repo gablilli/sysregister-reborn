@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { cookies } from "next/headers";
 import { SignJWT } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,33 +9,28 @@ const API_HEADERS = {
 };
 
 /**
- * Sets authentication cookies with secure options.
+ * Sets authentication cookies on a NextResponse object with secure options.
  */
-async function setAuthCookies(token: string, expire: string, tokenJwt: string) {
-  const cookieStore = cookies();
+function setAuthCookiesOnResponse(
+  response: NextResponse,
+  token: string,
+  expire: string,
+  tokenJwt: string
+) {
   const useSecureCookies = process.env.COOKIE_SECURE === 'true';
+  const cookieOptions = {
+    httpOnly: true,
+    secure: useSecureCookies,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 60 * 60 * 2, // 2 hours
+  };
   
-  cookieStore.set("internal_token", tokenJwt, {
-    httpOnly: true,
-    secure: useSecureCookies,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 2, // 2 hours
-  });
-  cookieStore.set("tokenExpiry", new Date(expire).toISOString(), {
-    httpOnly: true,
-    secure: useSecureCookies,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 2, // 2 hours
-  });
-  cookieStore.set("token", token, {
-    httpOnly: true,
-    secure: useSecureCookies,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 2, // 2 hours
-  });
+  response.cookies.set("internal_token", tokenJwt, cookieOptions);
+  response.cookies.set("tokenExpiry", new Date(expire).toISOString(), cookieOptions);
+  response.cookies.set("token", token, cookieOptions);
+  
+  return response;
 }
 
 export async function POST(request: NextRequest) {
@@ -143,13 +137,16 @@ export async function POST(request: NextRequest) {
       .setExpirationTime("2h")
       .sign(secret);
 
-    // Set authentication cookies
-    await setAuthCookies(token, expire, tokenJwt);
+    console.log("[API /auth/login] Token JWT generato, impostando cookies sulla response");
 
-    console.log("[API /auth/login] Token JWT generato e cookies impostati, successo");
+    // Create response and set authentication cookies on it
+    const response = NextResponse.json({ success: true });
+    setAuthCookiesOnResponse(response, token, expire, tokenJwt);
 
-    // Return success response
-    return NextResponse.json({ success: true });
+    console.log("[API /auth/login] Cookies impostati sulla response, successo");
+
+    // Return response with cookies
+    return response;
   } catch (error) {
     console.error("[API /auth/login] Errore nella comunicazione con il server:", error);
     return NextResponse.json(
