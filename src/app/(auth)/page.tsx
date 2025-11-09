@@ -49,15 +49,36 @@ export default function Page() {
         }
 
         if (data.success) {
-          console.log("[CLIENT] Login successful, redirecting to app");
-          // Success - redirect to app
+          console.log("[CLIENT] Login successful, waiting for cookies to be set");
+          
+          // Success - redirect to app after confirming cookies are set
           const redirectTo = goTo && ["/app", "/app/profile", "/app/register"].includes(goTo) 
             ? goTo 
             : "/app";
           
-          // Small delay to ensure cookies are fully set in browser before redirect
-          await new Promise(resolve => setTimeout(resolve, 150));
-          window.location.href = redirectTo;
+          // Poll for cookies to be set before redirecting (max 3 seconds)
+          let attempts = 0;
+          const maxAttempts = 30; // 30 * 100ms = 3 seconds max
+          
+          const checkCookiesAndRedirect = () => {
+            attempts++;
+            const hasAuthStatus = document.cookie.includes('auth_status=authenticated');
+            
+            if (hasAuthStatus) {
+              console.log("[CLIENT] Authentication confirmed, redirecting to", redirectTo);
+              window.location.href = redirectTo;
+            } else if (attempts < maxAttempts) {
+              console.log("[CLIENT] Authentication cookies not yet available, retrying...", attempts);
+              setTimeout(checkCookiesAndRedirect, 100);
+            } else {
+              console.error("[CLIENT] Authentication cookies never set after", maxAttempts, "attempts");
+              showError("Errore nell'impostazione dell'autenticazione. Riprova.");
+              setLoading(false);
+            }
+          };
+          
+          // Start checking after a small initial delay
+          setTimeout(checkCookiesAndRedirect, 50);
         } else {
           console.error("[CLIENT] Login failed - unexpected response");
           showError("Si è verificato un errore durante l'accesso");

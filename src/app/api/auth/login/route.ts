@@ -30,6 +30,15 @@ function setAuthCookiesOnResponse(
   response.cookies.set("tokenExpiry", new Date(expire).toISOString(), cookieOptions);
   response.cookies.set("token", token, cookieOptions);
   
+  // Set a client-readable cookie so client code can verify auth state
+  response.cookies.set("auth_status", "authenticated", {
+    httpOnly: false,  // Client-readable
+    secure: useSecureCookies,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 60 * 60 * 2, // 2 hours
+  });
+  
   return response;
 }
 
