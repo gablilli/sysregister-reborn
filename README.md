@@ -22,6 +22,23 @@ Self-hosting allows you to run your own instance of SysRegister, avoiding centra
 
 ### Quick Start with Docker Compose
 
+#### Option 1: Automated Setup (Recommended)
+
+Run the quick start script:
+```bash
+git clone https://github.com/gablilli/sysregister-reborn.git
+cd sysregister-reborn
+./start.sh
+```
+
+This script will:
+- Create the `.env` file with a random JWT secret
+- Create necessary data directories
+- Build and start the Docker containers
+- Display helpful information
+
+#### Option 2: Manual Setup
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/gablilli/sysregister-reborn.git
