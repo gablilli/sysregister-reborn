@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function handleAuthError() {
-    cookies().delete("token");
-    cookies().delete("tokenExpiry");
-    cookies().delete("internal_token");
+    const cookieStore = await cookies();
+    cookieStore.delete("token");
+    cookieStore.delete("tokenExpiry");
+    cookieStore.delete("internal_token");
     redirect(`/auth`);
 }
